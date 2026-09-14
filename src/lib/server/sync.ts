@@ -133,7 +133,13 @@ export async function fetchAndStorePdfAndItems(
 		if (pdf) {
 			mkdirSync(pdfDir(storeId), { recursive: true });
 			writeFileSync(path, pdf);
-			await db.update(receipts).set({ pdfFetched: true }).where(eq(receipts.id, id)).run();
+			await db.update(receipts).set({ pdfFetched: true, pdfUnavailable: false }).where(eq(receipts.id, id)).run();
+		} else {
+			// Modul hat explizit `null` geliefert -- laut Vertrag heißt das "kein PDF für diesen
+			// Beleg", nicht "vorübergehend nicht erreichbar" (ein echter Netzwerk-/Auth-Fehler wirft
+			// stattdessen, siehe StoreModule-Doku). Ohne diese Markierung würde die Detailseite bei
+			// jedem Aufruf erneut (erfolglos) nachladen, siehe receipts/[id]/+page.server.ts.
+			await db.update(receipts).set({ pdfUnavailable: true }).where(eq(receipts.id, id)).run();
 		}
 	}
 

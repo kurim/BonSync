@@ -18,8 +18,11 @@ export const load: PageServerLoad = async ({ params }) => {
 	// erst hier geholt, nicht schon beim Sync — vermeidet Massen-Downloads bei großem Erst-Sync.
 	// `pdfFetched` nur einfordern, wenn der Händler überhaupt PDFs liefert (providesPdf) -- sonst
 	// würde hier bei jedem Seitenaufruf erneut (erfolglos) nachgeladen, weil pdfFetched für so
-	// ein Modul nie true wird.
-	if (!receipt.itemsFetched || (providesPdf && !receipt.pdfFetched)) {
+	// ein Modul nie true wird. Genauso `pdfUnavailable` ausschließen: manche Händler liefern PDFs
+	// nur für einen Teil ihrer Belege (z.B. OBI bei älteren Einkäufen) -- einmal bestätigt "kein
+	// PDF für DIESEN Beleg" soll das nicht erneut versucht werden (manuelles "Neu einlesen"
+	// bleibt über die reprocess-Action weiterhin möglich, die diese Prüfung umgeht).
+	if (!receipt.itemsFetched || (providesPdf && !receipt.pdfFetched && !receipt.pdfUnavailable)) {
 		const storeId = receipt.storeId as StoreId;
 		const module = getModule(storeId);
 		const creds = module ? await loadCredentials(storeId) : null;
