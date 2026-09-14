@@ -186,7 +186,7 @@
 
 	<!-- Chart + Recent Receipts -->
 	<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md mb-space-xl">
-		<div class="col-span-6 2xl:col-span-7 flex flex-col justify-between rounded-xl bg-surface-container-low p-space-lg shadow-lg">
+		<div class="col-span-6 flex flex-col justify-between rounded-xl bg-surface-container-low p-space-lg shadow-lg">
 			<div>
 				<div class="flex flex-wrap items-center justify-between gap-space-sm mb-space-md">
 					<div>
@@ -198,8 +198,8 @@
 						<span class="font-label-mono-sm text-label-mono-sm text-primary font-bold">{euro(data.sixMonthTotalCents)}</span>
 					</div>
 				</div>
-				<div class="relative w-full h-64">
-					<svg viewBox="0 0 520 220" width="100%" height="100%" style="display:block; overflow:visible;" role="img" aria-label="Monatsausgaben je Supermarkt, letzte sechs Monate">
+				<div class="relative w-full" style="aspect-ratio: 520 / 220;">
+					<svg viewBox="0 0 520 220" width="100%" height="100%" preserveAspectRatio="none" style="display:block; overflow:visible;" role="img" aria-label="Monatsausgaben je Supermarkt, letzte sechs Monate">
 						{#each yTicks as tick (tick)}
 							{@const y = chartBottom - tick * scale}
 							<line x1={chartLeft} y1={y} x2={chartRight} y2={y} class="text-surface-container-highest" stroke="currentColor" stroke-dasharray={tick === 0 ? 'none' : '2 4'} stroke-width="1" />
@@ -243,7 +243,7 @@
 			</div>
 		</div>
 
-		<div class="col-span-6 2xl:col-span-5 flex flex-col justify-between rounded-xl bg-surface-container-low p-space-lg shadow-lg">
+		<div class="col-span-6 flex flex-col justify-between rounded-xl bg-surface-container-low p-space-lg shadow-lg">
 			<div>
 				<div class="flex items-center justify-between mb-space-sm">
 					<div>
