@@ -26,12 +26,14 @@
 		{ href: '/dashboard', label: 'Dashboard', icon: 'fa-solid fa-tachograph-digital' },
 		{ href: '/receipts', label: 'Kassenzettel', icon: 'fa-solid fa-receipt' },
 		{ href: '/dealer-interfaces', label: 'Händler-Schnittstellen', icon: 'fa-regular fa-cloud' },
+		{ href: '/filialen', label: 'Filial-Standorte', icon: 'fa-solid fa-location-dot' },
+		{ href: '/store', label: 'Store', icon: 'fa-solid fa-shop' },
 		{ href: '/statistics', label: 'Statistiken', icon: 'fa-solid fa-chart-column' },
 		{ href: '/settings', label: 'Einstellungen', icon: 'fa-solid fa-gear' }
 	];
 </script>
 
-{#if data.authenticated}
+{#if data.authenticated && page.url.pathname !== '/onboarding'}
 	<div class="shell" class:compact={sidebarCollapsed}>
 		<aside class="sidebar" class:compact={sidebarCollapsed}>
 			<div class="brand">

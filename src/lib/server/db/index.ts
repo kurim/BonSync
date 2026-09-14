@@ -132,7 +132,8 @@ export function ensureSchema() {
 		'ALTER TABLE receipts ADD COLUMN meta_json TEXT',
 		'ALTER TABLE app_settings ADD COLUMN sync_interval_minutes INTEGER NOT NULL DEFAULT 60',
 		'ALTER TABLE app_settings ADD COLUMN builtin_modules_seeded_at INTEGER',
-		'ALTER TABLE receipts ADD COLUMN pdf_unavailable INTEGER NOT NULL DEFAULT 0'
+		'ALTER TABLE receipts ADD COLUMN pdf_unavailable INTEGER NOT NULL DEFAULT 0',
+		'ALTER TABLE app_settings ADD COLUMN onboarding_completed_at INTEGER'
 	]) {
 		try {
 			sqlite.exec(ddl);
@@ -140,4 +141,15 @@ export function ensureSchema() {
 			// Spalte existiert bereits
 		}
 	}
+
+	// Bestandsinstallationen (liefen schon vor Einführung des Onboardings, erkennbar an einem
+	// gesetzten builtin_modules_seeded_at) gelten rückwirkend als bereits onboarded -- sonst würde
+	// ein bestehender Nutzer nach einem Update plötzlich in den Einrichtungsassistenten geschickt.
+	// Nur EINMALIG relevant: eine wirklich neue Instanz hat auch builtin_modules_seeded_at noch
+	// NULL und durchläuft das Onboarding regulär (siehe hooks.server.ts).
+	sqlite.exec(`
+		UPDATE app_settings
+		SET onboarding_completed_at = builtin_modules_seeded_at
+		WHERE onboarding_completed_at IS NULL AND builtin_modules_seeded_at IS NOT NULL
+	`);
 }

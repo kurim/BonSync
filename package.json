@@ -9,8 +9,7 @@
     "preview": "vite preview",
     "start": "node build/index.js",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "db:generate": "drizzle-kit generate",
-    "build:modules": "node modules-src/build.mjs"
+    "db:generate": "drizzle-kit generate"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.5.7",
@@ -27,8 +26,7 @@
     "svelte-check": "^4.7.6",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.6.3",
-    "vite": "^8.3.0",
-    "yazl": "^3.3.1"
+    "vite": "^8.3.0"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.3.1",

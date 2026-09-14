@@ -36,6 +36,17 @@ export async function setPassword(newPassword: string) {
 	await db.update(appSettings).set({ passwordHash: hashPassword(newPassword) }).where(eq(appSettings.id, 1)).run();
 }
 
+/** true, solange der Einrichtungsassistent (siehe routes/onboarding) noch nicht abgeschlossen
+ * wurde -- hooks.server.ts nutzt das für die Redirect-Gate, analog zu isValidSession/PUBLIC_PATHS. */
+export async function needsOnboarding(): Promise<boolean> {
+	const settings = await getSettings();
+	return !settings.onboardingCompletedAt;
+}
+
+export async function completeOnboarding() {
+	await db.update(appSettings).set({ onboardingCompletedAt: Date.now() }).where(eq(appSettings.id, 1)).run();
+}
+
 export async function createSession(): Promise<{ token: string; expiresAt: number }> {
 	const token = randomToken();
 	const now = Date.now();

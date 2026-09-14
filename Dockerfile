@@ -9,9 +9,6 @@ COPY package.json package-lock.json* .npmrc ./
 RUN npm install
 COPY . .
 RUN npm run build
-# Baut die Modul-Pakete (rewe/penny/lidl/rossmann) aus modules-src/ frisch zu
-# modules-builtin/*.zip -- läuft VOR "npm prune", da esbuild/yazl nur devDependencies sind.
-RUN npm run build:modules
 RUN npm prune --omit=dev
 # Chromium + Betriebssystem-Abhängigkeiten für Playwright (nur einmal hier, landet über
 # node_modules/.cache bzw. den Standard-Browserpfad im Image, wird unten mitkopiert).
@@ -29,9 +26,6 @@ RUN groupadd -r bonsync && useradd -r -g bonsync bonsync
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
-# Modul-Pakete (siehe hooks.server.ts#seedBuiltinModulesOnce) -- werden beim allerersten Boot
-# einer Instanz automatisch nach ${DATA_DIR}/modules/ installiert.
-COPY --from=builder /app/modules-builtin ./modules-builtin
 COPY --from=builder /root/.cache/ms-playwright /home/bonsync/.cache/ms-playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/bonsync/.cache/ms-playwright
 # `--with-deps` im Builder installierte die für Chromium nötigen Shared Libraries (u.a.

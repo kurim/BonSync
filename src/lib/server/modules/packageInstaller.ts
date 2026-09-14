@@ -7,7 +7,7 @@ import { installedModules } from '../db/schema';
 import { parseManifest, type ModuleManifest } from './manifest';
 import { loadModuleFromDirectory, validateModuleDirectory, modulesDir, unregisterModule } from './registry';
 
-export type ModuleSource = 'builtin' | 'uploaded';
+export type ModuleSource = 'uploaded' | 'store';
 
 // Module-.js-Dateien + ein optionales Logo sind klein -- diese Grenzen sind bewusst großzügig
 // genug für legitime Pakete, aber eng genug, um einen Zip-Bomb-artigen Upload früh abzubrechen.
@@ -187,8 +187,9 @@ export async function commitStagedInstall(
 		.run();
 }
 
-/** Staging + Commit in einem Aufruf -- genutzt für das automatische Erstinstallieren der
- * eingebauten Module beim Boot (siehe hooks.server.ts), wo es keine Vorschau-UI braucht. */
+/** Staging + Commit in einem Aufruf -- genutzt vom Store-Tab (siehe
+ * modules/storeCatalog.ts#installFromCatalogEntry), wo der Katalog-Eintrag bereits alle nötigen
+ * Metadaten liefert und keine separate Vorschau-UI wie beim manuellen Zip-Upload nötig ist. */
 export async function installModulePackage(
 	zipBuffer: Buffer,
 	opts: { overwrite: boolean; source: ModuleSource }

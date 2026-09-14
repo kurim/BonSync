@@ -4,9 +4,3 @@ build
 data
 .env
 *.log
-.modules-build-tmp
-
-# Zertifikate/Secrets nicht versehentlich committen
-auth_rewe/*.pfx
-auth_rewe/*.pem
-auth_rewe/*.key

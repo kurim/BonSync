@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy, untrack } from 'svelte';
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { getStoreUi, timeAgo, euro } from '$lib/stores-ui';
 	import ConfirmUninstallDialog from '$lib/components/ConfirmUninstallDialog.svelte';
@@ -70,12 +70,6 @@
 		})
 	);
 
-	const filteredFilialen = $derived(
-		searchValue.trim()
-			? data.filialen.filter((f) => `${f.name} ${f.street} ${f.city}`.toLowerCase().includes(searchValue.toLowerCase()))
-			: data.filialen
-	);
-
 	function onKeydown(e: KeyboardEvent) {
 		if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
 			e.preventDefault();
@@ -93,54 +87,9 @@
 
 	let syncingAll = $state(false);
 	let uninstallDialogs: Record<string, { open: () => void } | undefined> = {};
-	let installBusy = $state(false);
-	let installOverwrite = $state(false);
-	let dragOver = $state(false);
-	let fileInputEl: HTMLInputElement | undefined = $state();
 
 	const connectionRatePct = $derived(data.syncStatus.enabledCount > 0 ? Math.round((data.syncStatus.connectedCount / data.syncStatus.enabledCount) * 100) : 0);
 	const savingsRatePct = $derived(data.totalReceipts > 0 ? Math.round((data.receiptsWithSavings / data.totalReceipts) * 100) : 0);
-
-	// --- Leaflet-Karte (nur Client, Leaflet braucht `window`) ---
-	let mapEl: HTMLDivElement | undefined = $state();
-	let mapInstance: import('leaflet').Map | null = null;
-
-	onMount(async () => {
-		if (!mapEl || !data.mapTileUrl) return;
-		const L = (await import('leaflet')).default;
-		await import('leaflet/dist/leaflet.css');
-
-		const map = L.map(mapEl, { zoomControl: true, attributionControl: true });
-		mapInstance = map;
-		L.tileLayer(data.mapTileUrl, {
-			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a>',
-			maxZoom: 19
-		}).addTo(map);
-
-		const withCoords = data.filialen.filter((f) => f.lat != null && f.lon != null);
-		if (withCoords.length > 0) {
-			const bounds = L.latLngBounds(withCoords.map((f) => [f.lat as number, f.lon as number]));
-			for (const f of withCoords) {
-				const color = getStoreUi(f.storeId).color;
-				L.circleMarker([f.lat as number, f.lon as number], {
-					radius: 9,
-					color,
-					fillColor: color,
-					fillOpacity: 0.85,
-					weight: 2
-				})
-					.addTo(map)
-					.bindPopup(`<b>${f.name}</b><br>${f.street}, ${f.zip} ${f.city}<br>${f.count} Einkauf${f.count === 1 ? '' : 'e'}`);
-			}
-			map.fitBounds(bounds.pad(0.25));
-		} else {
-			map.setView([51.16, 10.45], 6); // Deutschland-Übersicht als Fallback
-		}
-	});
-
-	onDestroy(() => {
-		mapInstance?.remove();
-	});
 </script>
 
 <svelte:head><title>Händler-Schnittstellen — BonSync</title></svelte:head>
@@ -259,7 +208,7 @@
 			<input
 				bind:this={searchInputEl}
 				class="w-full h-12 pl-12 pr-space-md bg-surface-container-low rounded-xl text-on-surface placeholder:text-outline font-body-md text-body-md focus:outline-none focus:bg-surface-container transition-all shadow-inner"
-				placeholder="Filialen oder Händler filtern …"
+				placeholder="Händler filtern …"
 				type="text"
 				bind:value={searchValue}
 			/>
@@ -284,9 +233,9 @@
 		</div>
 	</div>
 
-	<div class="grid grid-cols-1 md:grid-cols-12 gap-space-lg items-start">
+	<div class="flex flex-col gap-space-lg items-start">
 		<!-- Händler-Module -->
-		<section class="col-span-6 2xl:col-span-7 flex flex-col gap-space-md">
+		<section class="w-full flex flex-col gap-space-md">
 			<div class="flex items-center justify-between">
 				<h2 class="font-headline-sm text-headline-sm font-semibold flex items-center gap-2">
 					<i class="fa-solid fa-server text-[18px] text-primary"></i>
@@ -489,185 +438,6 @@
 			{:else}
 				<div class="rounded-xl bg-surface-container p-space-lg text-center text-body-sm text-on-surface-variant">Keine Module gefunden.</div>
 			{/each}
-
-			<!-- Weiteres Modul per Zip installieren, siehe docs/module-format.md -->
-			<div class="rounded-xl bg-surface-container p-space-md shadow-md flex flex-col gap-space-sm">
-				<div class="flex items-center gap-space-sm">
-					<div class="w-11 h-11 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
-						<i class="fa-solid fa-puzzle-piece text-[18px] text-primary"></i>
-					</div>
-					<div class="flex-1 min-w-0">
-						<div class="font-body-md text-body-md font-semibold text-on-surface">Weiteres Modul installieren</div>
-						<div class="font-body-sm text-body-sm text-on-surface-variant">Modul-Paket (.zip) hochladen -- siehe docs/module-format.md.</div>
-					</div>
-				</div>
-
-				{#if !form?.installPreview}
-					<form
-						method="POST"
-						action="?/installPreview"
-						enctype="multipart/form-data"
-						use:enhance={() => {
-							installBusy = true;
-							return async ({ update }) => {
-								installBusy = false;
-								await update();
-							};
-						}}
-					>
-						<label
-							class={[
-								'h-10 rounded-lg border border-dashed flex items-center justify-center gap-2 font-label-mono-sm text-label-mono-sm transition-colors',
-								installBusy
-									? 'opacity-60 border-outline-variant/60 text-on-surface-variant'
-									: dragOver
-										? 'border-primary bg-primary/10 text-primary cursor-pointer'
-										: 'border-outline-variant/60 text-on-surface-variant cursor-pointer hover:bg-surface-container-high'
-							]}
-							ondragover={(e) => {
-								e.preventDefault();
-								if (!installBusy) dragOver = true;
-							}}
-							ondragleave={() => (dragOver = false)}
-							ondrop={(e) => {
-								e.preventDefault();
-								dragOver = false;
-								if (installBusy || !fileInputEl) return;
-								const dropped = e.dataTransfer?.files;
-								if (dropped && dropped.length > 0) {
-									fileInputEl.files = dropped;
-									fileInputEl.form?.requestSubmit();
-								}
-							}}
-						>
-							<i class="fa-solid {installBusy ? 'fa-arrows-rotate animate-spin' : 'fa-upload'} text-[14px]"></i>
-							{installBusy ? 'Prüfe Paket…' : dragOver ? 'Zip hier ablegen' : 'Zip-Datei auswählen oder hierher ziehen'}
-							<input
-								bind:this={fileInputEl}
-								type="file"
-								name="file"
-								accept=".zip"
-								class="hidden"
-								disabled={installBusy}
-								onchange={(e) => e.currentTarget.form?.requestSubmit()}
-							/>
-						</label>
-					</form>
-					{#if form?.installError}
-						<p class="font-body-sm text-body-sm text-error">{form.installError}</p>
-					{/if}
-					{#if form?.installedId}
-						<p class="font-body-sm text-body-sm text-emerald-400">Modul "{form.installedId}" wurde installiert.</p>
-					{/if}
-				{:else}
-					{@const preview = form.installPreview}
-					{@const isUpgrade = preview.alreadyInstalled && preview.installedVersion !== null && preview.installedVersion !== preview.version}
-					<div class="rounded-lg bg-surface-container-high/60 p-space-sm flex flex-col gap-space-xs">
-						<div class="flex items-center justify-between gap-space-sm">
-							<span class="font-body-md text-body-md font-semibold text-on-surface">{preview.displayName}</span>
-							<span class="font-label-mono-xs text-label-mono-xs text-outline">
-								{#if isUpgrade}v{preview.installedVersion} → v{preview.version}{:else}v{preview.version}{/if}
-							</span>
-						</div>
-						{#if preview.description}
-							<p class="font-body-sm text-body-sm text-on-surface-variant">{preview.description}</p>
-						{/if}
-						<div class="font-label-mono-xs text-label-mono-xs text-outline">
-							{preview.id} · {preview.loginStrategyKind}{preview.author ? ` · ${preview.author}` : ''}
-						</div>
-						{#if preview.alreadyInstalled}
-							<label class="flex items-start gap-2 mt-1 cursor-pointer">
-								<input type="checkbox" bind:checked={installOverwrite} class="accent-error mt-0.5" />
-								<span class="font-body-sm text-body-sm text-on-surface">
-									{#if isUpgrade}
-										<span class="font-semibold text-primary">Aktualisierung verfügbar (v{preview.installedVersion} installiert).</span>
-										Auf v{preview.version} aktualisieren -- Belege/Zugangsdaten bleiben erhalten, nur Code+Manifest werden ersetzt.
-									{:else}
-										<span class="font-semibold text-error">Modul "{preview.id}" ist bereits in Version v{preview.installedVersion} installiert.</span>
-										Trotzdem neu installieren -- Belege/Zugangsdaten bleiben erhalten, nur Code+Manifest werden ersetzt.
-									{/if}
-								</span>
-							</label>
-						{/if}
-						<div class="flex items-center justify-end gap-space-sm mt-space-xs">
-							<form method="POST" action="?/cancelInstall" use:enhance>
-								<input type="hidden" name="stagingDir" value={preview.stagingDir} />
-								<button type="submit" class="px-space-md py-1.5 rounded-lg font-label-mono-sm text-label-mono-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors">
-									Abbrechen
-								</button>
-							</form>
-							<form
-								method="POST"
-								action="?/installConfirm"
-								use:enhance={() => {
-									installBusy = true;
-									return async ({ update }) => {
-										installBusy = false;
-										installOverwrite = false;
-										await update();
-									};
-								}}
-							>
-								<input type="hidden" name="stagingDir" value={preview.stagingDir} />
-								<input type="hidden" name="overwrite" value={installOverwrite} />
-								<button
-									type="submit"
-									disabled={installBusy || (preview.alreadyInstalled && !installOverwrite)}
-									class="px-space-md py-1.5 rounded-lg bg-primary text-on-primary-container font-label-mono-sm text-label-mono-sm font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-								>
-									{isUpgrade ? 'Aktualisieren' : preview.alreadyInstalled ? 'Installieren & überschreiben' : 'Installieren'}
-								</button>
-							</form>
-						</div>
-					</div>
-				{/if}
-			</div>
-		</section>
-
-		<!-- Filial-Standorte -->
-		<section class="col-span-6 2xl:col-span-5 flex flex-col gap-space-md">
-			<h2 class="font-headline-sm text-headline-sm font-semibold flex items-center gap-2">
-				<i class="fa-solid fa-location-dot text-[18px] text-primary"></i>
-				Filial-Standorte
-			</h2>
-			<div class="rounded-xl bg-surface-container p-space-md shadow-md flex flex-col gap-space-sm">
-				<p class="font-body-sm text-body-sm text-on-surface-variant">
-					Adressen stammen direkt aus deinen synchronisierten Belegen und werden bei jedem Sync aktualisiert.
-				</p>
-
-				{#if data.mapTileUrl}
-					<div bind:this={mapEl} class="w-full h-64 rounded-lg overflow-hidden bg-surface-container-low"></div>
-				{:else}
-					<div class="w-full rounded-lg bg-surface-container-low p-space-md flex flex-col items-center text-center gap-1.5">
-						<i class="fa-solid fa-map-location-dot text-[22px] text-outline"></i>
-						<p class="font-body-sm text-body-sm text-on-surface-variant">
-							Karte nicht konfiguriert. In <code class="font-label-mono-xs text-label-mono-xs bg-surface-container-high px-1 rounded">.env</code> einen
-							<code class="font-label-mono-xs text-label-mono-xs bg-surface-container-high px-1 rounded">MAPTILER_API_KEY</code> hinterlegen (kostenloser Key unter maptiler.com), um Filialen auf einer Karte zu sehen.
-						</p>
-					</div>
-				{/if}
-
-				{#if filteredFilialen.length > 0}
-					<div class="flex flex-col divide-y divide-surface-container-high/60">
-						{#each filteredFilialen as f, i (f.address + f.storeId)}
-							{@const ui = getStoreUi(f.storeId)}
-							<div class="flex items-center gap-space-sm py-2">
-								<span class="w-2 h-2 rounded-full shrink-0" style="background:{ui.color}"></span>
-								<div class="min-w-0 flex-1">
-									<div class="flex items-center gap-1.5">
-										<span class="font-body-md text-body-md font-medium text-on-surface truncate">{f.name}</span>
-										{#if i === 0}<span class="font-label-mono-xs text-label-mono-xs px-1.5 py-0.5 rounded bg-primary/20 text-primary shrink-0">Meistbesucht</span>{/if}
-									</div>
-									<div class="font-body-sm text-body-sm text-on-surface-variant truncate">{f.street}, {f.zip} {f.city}</div>
-								</div>
-								<span class="font-label-mono-sm text-label-mono-sm font-semibold text-on-surface shrink-0">{f.count} Einkauf{f.count === 1 ? '' : 'e'}</span>
-							</div>
-						{/each}
-					</div>
-				{:else}
-					<p class="font-body-sm text-body-sm text-on-surface-variant text-center py-space-md">Noch keine Filialen mit Adressdaten synchronisiert.</p>
-				{/if}
-			</div>
 		</section>
 	</div>
 </div>

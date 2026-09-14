@@ -88,10 +88,16 @@ export const appSettings = sqliteTable('app_settings', {
 	mqttBaseTopic: text('mqtt_base_topic').default('bonsync/'),
 	mqttPublishNew: integer('mqtt_publish_new', { mode: 'boolean' }).notNull().default(true),
 	mqttPublishSummary: integer('mqtt_publish_summary', { mode: 'boolean' }).notNull().default(true),
-	// Zeitpunkt, zu dem die im Repo mitgelieferten Builtin-Module (modules-builtin/*.zip) zuletzt
-	// automatisch installiert wurden -- nur beim allerersten Boot (Feld ist NULL) gesetzt, damit
-	// ein bewusst deinstalliertes Builtin nicht beim nächsten Neustart ungefragt wiederkehrt.
-	builtinModulesSeededAt: integer('builtin_modules_seeded_at')
+	// Historisch: Zeitpunkt des automatischen Erstinstallierens der eingebauten Module (Feature
+	// entfernt, Module kommen jetzt ausschließlich über den Store, siehe modules/storeCatalog.ts).
+	// Bleibt als Feld erhalten, weil es jetzt als Migrationsmarker dient: eine Instanz, die dieses
+	// Feld schon gesetzt hat, lief vor Einführung des Onboardings (siehe onboardingCompletedAt) und
+	// wird deshalb beim Umstieg NICHT nachträglich ins Onboarding geschickt.
+	builtinModulesSeededAt: integer('builtin_modules_seeded_at'),
+	// Zeitpunkt, zu dem der Einrichtungsassistent (Passwort ändern + Händler auswählen, siehe
+	// routes/onboarding) abgeschlossen (oder für eine Bestandsinstallation rückwirkend als
+	// abgeschlossen markiert) wurde. NULL heißt: hooks.server.ts leitet auf /onboarding um.
+	onboardingCompletedAt: integer('onboarding_completed_at')
 });
 
 /** Persistenter Geocoding-Cache (Adresse -> Koordinaten), siehe geocoding.ts — Adressen ändern
