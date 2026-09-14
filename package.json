@@ -36,7 +36,7 @@
     "drizzle-orm": "^0.45.2",
     "leaflet": "^1.9.4",
     "mqtt": "^5.15.2",
-    "pdfjs-dist": "^5.4.296",
+    "pdfjs-dist": "^6.3.289",
     "playwright": "^1.49.1",
     "yaml": "^2.7.0",
     "yauzl": "^3.2.0"
