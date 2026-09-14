@@ -1,5 +1,10 @@
 services:
   bonsync:
+    # Fertiges Image aus der GitHub Container Registry (wird bei jedem Push auf main
+    # bzw. jedem v*-Tag automatisch gebaut, siehe .github/workflows/docker.yml).
+    #   docker compose pull && docker compose up -d
+    # Wer lieber selbst aus dem Quellcode baut: `docker compose up --build -d`.
+    image: ghcr.io/kurim/bonsync:latest
     build: .
     container_name: bonsync
     restart: unless-stopped
@@ -9,4 +14,3 @@ services:
       - .env
     volumes:
       - ./data:/app/data
-

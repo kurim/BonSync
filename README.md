@@ -57,10 +57,27 @@ möglicherweise falsche Adresse zu zeigen.
 
 ## Docker
 
+Fertige Images liegen in der GitHub Container Registry
+(`ghcr.io/kurim/bonsync`, für `amd64` und `arm64`) — selbst bauen ist nicht
+nötig. `latest` folgt dem `main`-Branch, Release-Tags (`v1.2.3`) bekommen
+zusätzlich `1.2.3`, `1.2` und `1`.
+
 ```bash
 cp .env.example .env   # anpassen
-docker compose up --build -d
+docker compose pull
+docker compose up -d
 ```
+
+Ohne Compose:
+
+```bash
+docker run -d --name bonsync --restart unless-stopped \
+  -p 3000:3000 --env-file .env -v ./data:/app/data \
+  ghcr.io/kurim/bonsync:latest
+```
+
+Update auf die neueste Version: `docker compose pull && docker compose up -d`.
+Wer lieber aus dem Quellcode baut: `docker compose up --build -d`.
 
 **Wichtig:** `ORIGIN` in `.env` muss exakt der URL entsprechen, unter der du
 BonSync im Browser öffnest (z.B. `http://192.168.1.50:3000`). Ohne
