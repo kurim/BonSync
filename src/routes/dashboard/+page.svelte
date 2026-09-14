@@ -314,10 +314,10 @@
 		</div>
 		<div class="flex items-center gap-space-sm">
 			<span
-				class="inline-flex items-center gap-1.5 px-space-sm py-1 rounded-full font-label-mono-xs text-label-mono-xs font-medium {data.pollingEnabled ? '' : 'bg-surface-container-high text-on-surface-variant'}"
-				style={data.pollingEnabled ? 'background:var(--success-soft); color:var(--success);' : ''}
+				class="inline-flex items-center gap-1.5 px-space-sm py-1 rounded-full font-label-mono-xs text-label-mono-xs font-medium"
+				style={data.pollingEnabled ? 'background:var(--success-soft); color:var(--success);' : 'background:var(--critical-soft); color:var(--critical);'}
 			>
-				<span class="w-1.5 h-1.5 rounded-full" style={data.pollingEnabled ? 'background:var(--success);' : 'background:var(--outline);'}></span>
+				<span class="w-1.5 h-1.5 rounded-full" style={data.pollingEnabled ? 'background:var(--success);' : 'background:var(--critical);'}></span>
 				Live-Polling {data.pollingEnabled ? 'an' : 'aus'}
 			</span>
 			<a href="/dealer-interfaces" class="font-label-mono-xs text-label-mono-xs px-space-md py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors">Modulübersicht</a>
