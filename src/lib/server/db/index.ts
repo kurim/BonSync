@@ -131,7 +131,8 @@ export function ensureSchema() {
 		'ALTER TABLE receipts ADD COLUMN coupons_json TEXT',
 		'ALTER TABLE receipts ADD COLUMN meta_json TEXT',
 		'ALTER TABLE app_settings ADD COLUMN sync_interval_minutes INTEGER NOT NULL DEFAULT 60',
-		'ALTER TABLE app_settings ADD COLUMN builtin_modules_seeded_at INTEGER'
+		'ALTER TABLE app_settings ADD COLUMN builtin_modules_seeded_at INTEGER',
+		'ALTER TABLE receipts ADD COLUMN pdf_unavailable INTEGER NOT NULL DEFAULT 0'
 	]) {
 		try {
 			sqlite.exec(ddl);

@@ -54,6 +54,11 @@ export const receipts = sqliteTable('receipts', {
 	hasStructuredItems: integer('has_structured_items', { mode: 'boolean' }).notNull().default(false),
 	itemsFetched: integer('items_fetched', { mode: 'boolean' }).notNull().default(false),
 	pdfFetched: integer('pdf_fetched', { mode: 'boolean' }).notNull().default(false),
+	// Modul hat bei einem PDF-Abrufversuch `null` zurückgegeben (Beleg hat schlicht keins, z.B.
+	// ältere OBI-Einkäufe ohne `receipts[]`-Link) -- getrennt von `pdfFetched: false`, damit die
+	// Detailseite das nicht auf jedem Aufruf erneut (erfolglos) nachzuladen versucht, siehe
+	// receipts/[id]/+page.server.ts.
+	pdfUnavailable: integer('pdf_unavailable', { mode: 'boolean' }).notNull().default(false),
 	savingsCents: integer('savings_cents'), // Coupon-/Rabatt-Ersparnis laut Bon, rein informativ
 	couponsJson: text('coupons_json'), // JSON-Array [{label, amountCents}], rein informativ
 	metaJson: text('meta_json') // JSON eines ReceiptMeta-Objekts (TSE/Zahlungsart/MwSt.-Aufschlüsselung), rein informativ

@@ -21,8 +21,9 @@
 	const idLabel = $derived(meta?.bonNr ?? shortId);
 	// "Vollständig geladen" darf ein PDF nur einfordern, wenn das Modul überhaupt jemals eins
 	// liefert (providesPdf) -- sonst bliebe der Beleg für PDF-lose Händler (z.B. Fressnapf) für
-	// immer als "unvollständig" markiert.
-	const complete = $derived(r.itemsFetched && (!data.providesPdf || r.pdfFetched));
+	// immer als "unvollständig" markiert. Genauso zählt ein bestätigt fehlendes PDF für DIESEN
+	// einzelnen Beleg (pdfUnavailable, z.B. ältere OBI-Einkäufe) als "fertig", nicht als offen.
+	const complete = $derived(r.itemsFetched && (!data.providesPdf || r.pdfFetched || r.pdfUnavailable));
 
 	function formatTseTime(iso: string): string {
 		const d = new Date(iso);
@@ -265,7 +266,13 @@
 					>
 						<i class="fa-solid {complete ? 'fa-circle-check' : 'fa-triangle-exclamation'} text-[14px]"></i>
 						{#if complete}
-							{data.providesPdf ? 'PDF & Artikel synchronisiert' : 'Artikel synchronisiert'}
+							{#if !data.providesPdf}
+								Artikel synchronisiert
+							{:else if r.pdfFetched}
+								PDF & Artikel synchronisiert
+							{:else}
+								Artikel synchronisiert (kein PDF für diesen Beleg)
+							{/if}
 						{:else}
 							{r.pdfFetched ? 'PDF synchronisiert' : 'Noch nicht vollständig geladen'}
 						{/if}
