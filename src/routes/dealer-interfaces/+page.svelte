@@ -244,6 +244,7 @@
 				<span class="font-label-mono-xs text-label-mono-xs text-outline">{implementedStores.length} Module konfiguriert</span>
 			</div>
 
+			<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md items-start">
 			{#each filteredStores as store (store.id)}
 				{@const ui = getStoreUi(store.id, store.displayName, store.ui)}
 				{@const isOAuth = store.loginStrategy.kind === 'oauth-pkce-manual' || store.loginStrategy.kind === 'oauth-pkce-redirect'}
@@ -436,8 +437,9 @@
 				</div>
 				<ConfirmUninstallDialog storeId={store.id} displayName={store.displayName} bind:this={uninstallDialogs[store.id]} />
 			{:else}
-				<div class="rounded-xl bg-surface-container p-space-lg text-center text-body-sm text-on-surface-variant">Keine Module gefunden.</div>
+				<div class="xl:col-span-2 rounded-xl bg-surface-container p-space-lg text-center text-body-sm text-on-surface-variant">Keine Module gefunden.</div>
 			{/each}
+			</div>
 		</section>
 	</div>
 </div>

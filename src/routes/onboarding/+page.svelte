@@ -156,7 +156,7 @@
 					Händler auswählen
 				</h2>
 				<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
-					Wähle, welche Module aus dem <a class="text-primary hover:underline" href="https://github.com/kurim/BonSync-Store" target="_blank" rel="noopener">BonSync-Store</a> installiert werden sollen -- weitere lassen sich jederzeit später über den Store-Tab nachinstallieren.
+					Wähle, welche Module aus dem <a class="text-primary hover:underline" href="https://github.com/kurim/BonSync-Store" target="_blank" rel="noopener">BonSync-Store</a> installiert werden sollen -- weitere lassen sich jederzeit später über den Modul-Store nachinstallieren.
 				</p>
 
 				{#if data.catalogError}

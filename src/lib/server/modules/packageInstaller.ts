@@ -187,7 +187,7 @@ export async function commitStagedInstall(
 		.run();
 }
 
-/** Staging + Commit in einem Aufruf -- genutzt vom Store-Tab (siehe
+/** Staging + Commit in einem Aufruf -- genutzt vom Modul-Store (siehe
  * modules/storeCatalog.ts#installFromCatalogEntry), wo der Katalog-Eintrag bereits alle nötigen
  * Metadaten liefert und keine separate Vorschau-UI wie beim manuellen Zip-Upload nötig ist. */
 export async function installModulePackage(

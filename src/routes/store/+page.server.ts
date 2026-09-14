@@ -13,7 +13,7 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async () => {
 	const catalog = await fetchStoreCatalog();
 	if ('error' in catalog) {
-		return { catalogError: catalog.error, modules: [] };
+		return { catalogError: catalog.error, modules: [], catalogFetchedAt: null };
 	}
 
 	const modules = catalog.modules.map((entry) => {
@@ -26,10 +26,19 @@ export const load: PageServerLoad = async () => {
 		};
 	});
 
-	return { catalogError: null, modules };
+	return { catalogError: null, modules, catalogFetchedAt: catalog.fetchedAt };
 };
 
 export const actions: Actions = {
+	/** Erzwingt einen frischen Katalog-Abruf (Refresh-Button) statt der gecachten Version --
+	 * SvelteKits use:enhance ruft nach einer Action standardmäßig invalidateAll() auf, load() liest
+	 * danach den gerade aufgefrischten Cache erneut. */
+	refreshCatalog: async () => {
+		const catalog = await fetchStoreCatalog({ force: true });
+		if ('error' in catalog) return fail(400, { catalogError: catalog.error });
+		return { refreshed: true };
+	},
+
 	/** Installiert bzw. aktualisiert ein Modul aus dem Store-Katalog. Der Katalog wird hier
 	 * server-seitig erneut geladen (statt dem Client zu vertrauen) und der Eintrag anhand der
 	 * übermittelten `id` herausgesucht -- gleiches Prinzip wie `installConfirm` im manuellen

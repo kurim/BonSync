@@ -54,7 +54,7 @@ export const actions: Actions = {
 	},
 
 	/** Schließt das Onboarding ab -- auch ohne installierte Module zulässig (kann jederzeit
-	 * später über den Store-Tab nachgeholt werden). */
+	 * später über den Modul-Store nachgeholt werden). */
 	finish: async () => {
 		await completeOnboarding();
 		throw redirect(303, '/dashboard');

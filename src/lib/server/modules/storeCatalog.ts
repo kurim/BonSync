@@ -27,21 +27,38 @@ interface CatalogResponse {
 	modules: CatalogEntry[];
 }
 
-/** Lädt den Modul-Katalog des BonSync-Store -- wirft nie, sondern liefert bei Netzwerk-/Parse-
- * Fehlern `{ error }` zurück (gleiches Robustheits-Muster wie sync.ts#loadCredentials): ein nicht
- * erreichbarer Store darf die Store-Seite nicht mit einem 500er lahmlegen. */
-export async function fetchStoreCatalog(): Promise<{ modules: CatalogEntry[] } | { error: string }> {
+// Prozessweiter In-Memory-Cache -- ohne das würde jeder Aufruf der Store-Seite (und jeder
+// Onboarding-Schritt 2) den Katalog neu vom GitHub-Release laden, obwohl der sich nur bei einem
+// Push auf BonSync-Store ändert. `force` (Refresh-Button) umgeht den Cache bewusst.
+const CACHE_TTL_MS = 10 * 60 * 1000;
+let cache: { modules: CatalogEntry[]; fetchedAt: number } | null = null;
+
+/** Lädt den Modul-Katalog des BonSync-Store (gecacht, siehe CACHE_TTL_MS) -- wirft nie, sondern
+ * liefert bei Netzwerk-/Parse-Fehlern `{ error }` zurück (gleiches Robustheits-Muster wie
+ * sync.ts#loadCredentials): ein nicht erreichbarer Store darf die Store-Seite nicht mit einem
+ * 500er lahmlegen. */
+export async function fetchStoreCatalog(
+	opts: { force?: boolean } = {}
+): Promise<{ modules: CatalogEntry[]; fetchedAt: number } | { error: string }> {
+	if (!opts.force && cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
+		return cache;
+	}
+
 	try {
 		const res = await fetch(CATALOG_URL);
 		if (!res.ok) {
+			if (cache) return cache; // veralteter Katalog ist besser als ein Fehler, solange einer existiert
 			return { error: `Store nicht erreichbar (HTTP ${res.status}).` };
 		}
 		const data = (await res.json()) as CatalogResponse;
 		if (!Array.isArray(data.modules)) {
+			if (cache) return cache;
 			return { error: 'Store-Katalog hat ein unerwartetes Format.' };
 		}
-		return { modules: data.modules };
+		cache = { modules: data.modules, fetchedAt: Date.now() };
+		return cache;
 	} catch (err) {
+		if (cache) return cache;
 		return { error: `Store nicht erreichbar: ${err instanceof Error ? err.message : String(err)}` };
 	}
 }

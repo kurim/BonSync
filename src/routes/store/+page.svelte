@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { timeAgo } from '$lib/stores-ui';
 
 	let { data, form } = $props();
 
 	let installingId = $state<string | null>(null);
+	let refreshing = $state(false);
 
 	// Fehlermeldung/Ergebnis der zuletzt betätigten "Installieren/Aktualisieren"-Kachel -- via
 	// storeId zugeordnet, damit ein Fehler bei einem Modul nicht fälschlich unter einem anderen
@@ -20,19 +22,46 @@
 	let fileInputEl: HTMLInputElement | undefined = $state();
 </script>
 
-<svelte:head><title>Store — BonSync</title></svelte:head>
+<svelte:head><title>Modul-Store — BonSync</title></svelte:head>
 
 <div class="flex flex-col w-full pb-space-xl font-body-md text-on-surface">
-	<div class="flex items-center gap-space-sm mb-space-lg">
-		<div class="flex items-center justify-center w-7 h-7 rounded-lg bg-surface-container-high shadow-inner text-primary">
-			<i class="fa-solid fa-shop text-[18px]"></i>
+	<div class="flex items-start justify-between gap-space-md mb-space-lg">
+		<div class="flex items-center gap-space-sm">
+			<div class="flex items-center justify-center w-7 h-7 rounded-lg bg-surface-container-high shadow-inner text-primary">
+				<i class="fa-solid fa-shop text-[18px]"></i>
+			</div>
+			<div>
+				<h1 class="font-headline-xl text-headline-xl text-on-surface font-bold tracking-tight">Modul-Store</h1>
+				<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+					Händler-Module aus dem offiziellen <a class="text-primary hover:underline" href="https://github.com/kurim/BonSync-Store" target="_blank" rel="noopener">BonSync-Store</a> installieren.
+				</p>
+			</div>
 		</div>
-		<div>
-			<h1 class="font-headline-xl text-headline-xl text-on-surface font-bold tracking-tight">Store</h1>
-			<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
-				Händler-Module aus dem offiziellen <a class="text-primary hover:underline" href="https://github.com/kurim/BonSync-Store" target="_blank" rel="noopener">BonSync-Store</a> installieren.
-			</p>
-		</div>
+		<form
+			method="POST"
+			action="?/refreshCatalog"
+			use:enhance={() => {
+				refreshing = true;
+				return async ({ update }) => {
+					refreshing = false;
+					await update();
+				};
+			}}
+		>
+			<div class="flex flex-col items-end gap-1">
+				<button
+					type="submit"
+					disabled={refreshing}
+					class="flex items-center gap-space-xs px-space-md h-9 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-mono-sm text-label-mono-sm font-semibold transition-all disabled:opacity-60"
+				>
+					<i class="fa-solid fa-arrows-rotate text-[14px] {refreshing ? 'animate-spin' : ''}"></i>
+					{refreshing ? 'Aktualisiere…' : 'Katalog aktualisieren'}
+				</button>
+				{#if data.catalogFetchedAt}
+					<span class="font-label-mono-xs text-label-mono-xs text-outline">Stand: {timeAgo(data.catalogFetchedAt)}</span>
+				{/if}
+			</div>
+		</form>
 	</div>
 
 	{#if data.catalogError}

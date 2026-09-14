@@ -27,8 +27,8 @@
 		{ href: '/receipts', label: 'Kassenzettel', icon: 'fa-solid fa-receipt' },
 		{ href: '/dealer-interfaces', label: 'Händler-Schnittstellen', icon: 'fa-regular fa-cloud' },
 		{ href: '/filialen', label: 'Filial-Standorte', icon: 'fa-solid fa-location-dot' },
-		{ href: '/store', label: 'Store', icon: 'fa-solid fa-shop' },
 		{ href: '/statistics', label: 'Statistiken', icon: 'fa-solid fa-chart-column' },
+		{ href: '/store', label: 'Modul-Store', icon: 'fa-solid fa-shop' },
 		{ href: '/settings', label: 'Einstellungen', icon: 'fa-solid fa-gear' }
 	];
 </script>

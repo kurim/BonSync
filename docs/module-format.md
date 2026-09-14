@@ -4,7 +4,7 @@ Dieses Dokument beschreibt, wie ein Händler-Modul für BonSync aufgebaut sein m
 installiert werden kann. BonSync selbst liefert keine Module mehr mit — die offiziellen Module
 (REWE, PENNY, LIDL, ROSSMANN, FRESSNAPF, OBI) liegen als Referenzimplementierung im separaten
 [BonSync-Store](https://github.com/kurim/BonSync-Store)-Repo, installierbar direkt über den
-Store-Tab. Dieses Dokument gilt unverändert für eigene, per Zip hochgeladene Module.
+Modul-Store. Dieses Dokument gilt unverändert für eigene, per Zip hochgeladene Module.
 
 ## 1. Überblick & Vertrauensmodell
 
@@ -280,7 +280,7 @@ Diese Zip-Datei kann direkt über die Oberfläche hochgeladen werden.
 
 ## 7. Installieren / Deinstallieren
 
-**Installieren** — entweder mit einem Klick über den **Store**-Tab (Katalog aus dem
+**Installieren** — entweder mit einem Klick über den **Modul-Store** (Katalog aus dem
 [BonSync-Store](https://github.com/kurim/BonSync-Store), inkl. SHA-256-Prüfung des Downloads), oder
 manuell über die **Dangerzone** am Ende derselben Seite: Zip auswählen, Vorschau
 (Name/Version/Autor/Beschreibung/Login-Art) prüfen. Ist die `id` bereits installiert, erscheint eine
