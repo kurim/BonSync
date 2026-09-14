@@ -1,12 +1,14 @@
 # BonSync — Supermarkt-Kassenbon-Hub
 
-SvelteKit-App, die Kassenbon-APIs mehrerer Supermärkte als an-/abschaltbare
-Module bündelt. Siehe [`docs/fahrplan-supermarkt-hub.md`](docs/fahrplan-supermarkt-hub.md)
-für den vollständigen Architekturplan.
+Selbst gehostete SvelteKit-App, die digitale Kassenbons mehrerer Supermärkte in einem
+Dashboard sammelt (Ausgaben, Artikel, Statistiken, optional MQTT/Home-Assistant-Anbindung).
 
-**Aktueller Stand (Phase 1–5 des Fahrplans):** Grundgerüst, Modul-Registry
-sowie REWE-, PENNY- und ROSSMANN-Modul sind fertig und funktionsfähig. LIDL
-ist im UI sichtbar, aber noch nicht angebunden (letzte Folge-Phase).
+BonSync selbst bringt **keine** Händler-Anbindung fest eingebaut mit — die gesamte
+Kommunikation mit einem Markt (Login, Beleg-Liste, PDF-Download, Artikelerkennung) steckt in
+einem austauschbaren **Modul**. Offizielle Module (u.a. REWE, PENNY, LIDL, ROSSMANN) pflegt und
+baut das separate [BonSync-Store](https://github.com/kurim/BonSync-Store)-Repo; sie werden zur
+Laufzeit über die Oberfläche installiert, nicht mitkompiliert. Wie ein Modul aufgebaut ist und
+wie man ein eigenes schreibt, steht in [`docs/module-format.md`](docs/module-format.md).
 
 ## Setup
 
@@ -17,43 +19,45 @@ npm install
 npm run dev
 ```
 
-Das REWE-mTLS-Zertifikat ist eine feste App-Ressource (identisch für jede
-Installation der offiziellen REWE-App, siehe `docs/api-rewe.md` Abschnitt 1.1)
-und reist direkt im REWE-Modul-Paket mit (Quelle: `rewe/module/` im
-[BonSync-Store](https://github.com/kurim/BonSync-Store)-Repo) — kein
-manuelles Bereitstellen mehr nötig. `REWE_CERT_DIR` in `.env` bleibt als
-optionaler Override verfügbar, falls REWE das Zertifikat rotiert.
+Erster Login: Passwort aus `APP_PASSWORD`. Der Hash wird beim allerersten Start automatisch in
+die DB geschrieben; danach ist `APP_PASSWORD` irrelevant und das Passwort wird über
+**Einstellungen → Passwort ändern** verwaltet.
 
-Erster Login: Passwort aus `APP_PASSWORD`. Der Hash wird beim allerersten
-Start automatisch in die DB geschrieben; danach ist `APP_PASSWORD` irrelevant
-und das Passwort wird über **Einstellungen → Passwort ändern** verwaltet.
+Direkt im Anschluss führt das **Onboarding** durch die Ersteinrichtung, inklusive Auswahl, welche
+Module aus dem BonSync-Store gleich installiert werden sollen — das lässt sich jederzeit später
+über den Modul-Store nachholen.
 
-## REWE / PENNY verbinden
+## Module installieren & verwalten
 
-Beide laufen über denselben manuellen PKCE-Flow (Login-Redirect zeigt auf eine
-Adresse, die BonSync nicht selbst entgegennehmen kann):
+Alles dazu läuft über zwei Seiten in der Oberfläche:
 
-1. **Märkte** öffnen → beim jeweiligen Markt „Login-Seite öffnen“ klicken.
-2. Den angezeigten Link in einem neuen Tab öffnen und einloggen.
-3. Der Redirect zeigt auf `de.rewe.app.mobile://redirect?code=...&state=...`
-   (REWE, Custom-URI-Scheme — der Browser kann das gar nicht öffnen) bzw.
-   `https://www.penny.de/app/login?code=...&state=...` (PENNY, evtl. eine
-   Fehlerseite, da die Domain PENNY gehört, nicht BonSync). In beiden Fällen
-   steht der Code trotzdem in der Adresszeile — komplette URL kopieren.
-4. In BonSync einfügen und „Verbinden“ klicken.
+- **Modul-Store** (`/store`): Katalog der offiziellen Module aus dem BonSync-Store, Installation
+  per Klick (inkl. SHA-256-Prüfung des Downloads). Über die **Dangerzone** am Ende derselben Seite
+  lässt sich zusätzlich ein selbst gebautes oder von Dritten bezogenes Modul als Zip hochladen —
+  Format und Vertrag dafür stehen in [`docs/module-format.md`](docs/module-format.md).
+- **Händler-Schnittstellen** (`/dealer-interfaces`): zeigt jedes installierte Modul als Karte mit
+  Sync-Status, verbindet Zugangsdaten und stößt manuelle Syncs an.
 
-## ROSSMANN verbinden
+Deinstallieren geht über das ⋮-Menü der jeweiligen Modul-Karte; ob dabei auch vorhandene Belege,
+Artikel und Zugangsdaten gelöscht werden, ist eine explizite Checkbox (Standard: nein, damit eine
+spätere Neuinstallation an die bestehende Sync-Historie anknüpft).
 
-Kein OAuth — direkt E-Mail + Passwort in der Markt-Karte eingeben und
-„Anmelden“ klicken. ROSSMANN kennt kein Token-Refresh; schlägt ein Sync mit
-Auth-Fehler fehl, hilft nur ein erneuter Login über dieselbe Karte.
+## Ein Modul verbinden
 
-PENNY-Marktdaten: Liefert die Ebons-API nur eine 4-stellige Marktnummer statt
-vollem Adressobjekt, wird sie über die öffentliche PENNY-Marktliste
-(`https://www.penny.de/.rest/market`) aufgelöst — aber nur, wenn die Nummer
-bundesweit eindeutig ist (ca. 30 % sind es nicht, siehe Kommentar in
-`pennyMarkets.ts`). Sonst bleibt es bei der reinen Nummer, statt eine
-möglicherweise falsche Adresse zu zeigen.
+Wie eine Verbindung hergestellt wird, hängt von der `loginStrategy` ab, die das jeweilige Modul in
+seinem Manifest angibt — die Karte auf **Händler-Schnittstellen** passt sich automatisch daran an:
+
+- **OAuth/PKCE** (`oauth-pkce-manual` / `oauth-pkce-redirect`): „Login-Seite öffnen“ klickt, den
+  angezeigten Link in einem neuen Tab öffnen und beim Markt einloggen. Der Redirect danach zeigt
+  auf eine Adresse, die BonSync nicht selbst entgegennehmen kann (Custom-URI-Scheme oder eine
+  Domain, die dem Markt gehört — teils mit Fehlerseite) — der Login-Code steht trotzdem in der
+  Adresszeile. Komplette URL kopieren, in BonSync einfügen, „Verbinden“ klicken.
+- **Zugangsdaten** (`credentials`): E-Mail + Passwort direkt in der Modul-Karte eingeben und
+  „Verbinden“ klicken. Ob und wie ein solches Modul abgelaufene Zugangsdaten selbst erneuert
+  (Token-Refresh) oder einen erneuten Login verlangt, ist Sache des jeweiligen Moduls.
+
+Modul-spezifische Eigenheiten (z.B. welche Marktdaten ein Händler liefert oder ob überhaupt ein
+PDF verfügbar ist) sind in der Doku des jeweiligen Moduls im BonSync-Store beschrieben, nicht hier.
 
 ## Docker
 
@@ -97,17 +101,22 @@ Volume: `./data` (SQLite-DB, heruntergeladene PDFs, installierte Modul-Pakete).
 
 ```
 src/lib/server/db/         Drizzle-Schema + SQLite-Verbindung
-src/lib/server/modules/    StoreModule-Contract, Registry, REWE-/PENNY-/ROSSMANN-Modul
-src/lib/server/receiptPdfParser.ts   PDF-Text-Extraktion + Artikel-Regex-Parser (REWE/PENNY)
-src/lib/server/pennyMarkets.ts        PENNY-Marktnummer -> Adresse (öffentliche Marktliste, mit Eindeutigkeits-Check)
+src/lib/server/modules/    Modul-Vertrag (types.ts), Registry, Modul-SDK, Paket-Installer,
+                            Store-Katalog — siehe docs/module-format.md
 src/lib/server/sync.ts     Sync-Orchestrator (Liste holen, upserten, PDF lazy/eager)
 src/lib/server/auth.ts     App-Login (Session-Cookie, scrypt-Passwort-Hash)
 src/lib/server/crypto.ts   AES-256-GCM-Verschlüsselung der Store-Credentials
-src/routes/                Dashboard, Kassenzettel, Märkte, Einstellungen
+src/lib/server/pkce.ts     PKCE-Helper, dem Modul-SDK zugrunde liegend
+src/lib/server/http.ts     HTTP-Client (inkl. mTLS) für das Modul-SDK
+src/lib/server/htmlToPdf.ts  Headless HTML→PDF-Rendering für Module ohne natives PDF
+src/lib/server/mqtt.ts     Optionale MQTT-Publikation neuer Belege
+src/lib/server/scheduler.ts  Automatischer Hintergrund-Sync
+src/routes/                Dashboard, Kassenzettel, Händler-Schnittstellen, Modul-Store,
+                            Filial-Standorte, Statistiken, Einstellungen
 ```
 
-## Nächste Schritte
+## Mitmachen
 
-Siehe Fahrplan Abschnitt 7: LIDL-Modul (Bot-Detection/reCAPTCHA, kein
-natives PDF — Headless-Browser-Rendering von `htmlPrintedReceipt` nötig,
-komplexester Fall — bewusst zuletzt).
+Wie Änderungen an BonSync selbst ablaufen (Setup, Checks, Review-Kriterien) steht in
+[`CONTRIBUTING.md`](CONTRIBUTING.md). Neue Händler oder Fixes an bestehenden Modulen gehören ins
+[BonSync-Store](https://github.com/kurim/BonSync-Store)-Repo, nicht hierher.
