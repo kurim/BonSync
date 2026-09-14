@@ -4,8 +4,10 @@ name: Docker
 # (ghcr.io/kurim/bonsync), damit Nutzer es direkt pullen können statt selbst zu bauen.
 #
 # Tags, die entstehen:
-#   - main-Branch            -> :latest  + :main + :sha-<kurzhash>
-#   - Git-Tag v1.2.3         -> :1.2.3 + :1.2 + :1 (+ :latest)
+#   - main-Branch            -> :latest (bleeding edge, folgt main's HEAD)
+#   - Git-Tag v1.2.3         -> :v1.2.3 (unveränderlich) + :stable (zeigt immer auf den
+#                                neuesten Release, NIE auf :latest -- Tags werden nicht
+#                                zwingend von main's aktuellem HEAD geschnitten)
 #   - Pull Requests          -> nur Build-Test (kein Push), damit Dockerfile-Brüche früh auffallen
 on:
   push:
@@ -26,6 +28,10 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Volle History + Tags, damit `git describe` unten den nächstgelegenen
+          # Release-Tag findet.
+          fetch-depth: 0
 
       # QEMU + Buildx für Multi-Arch (amd64 für normale Server/NAS, arm64 für Raspberry Pi & Co.).
       - uses: docker/setup-qemu-action@v3
@@ -39,22 +45,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Image-Tags und -Labels ableiten
+      - name: App-Version und Image-Tags ableiten
         id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
-          labels: |
-            org.opencontainers.image.title=BonSync
-            org.opencontainers.image.description=Supermarkt-Kassenbon-Hub (REWE, PENNY, ROSSMANN, LIDL)
+        run: |
+          image="${REGISTRY}/$(echo "${IMAGE_NAME}" | tr '[:upper:]' '[:lower:]')"
+
+          # Exakt auf einem Release-Tag (vX.Y.Z-Push) -> "vX.Y.Z".
+          # Commits seit dem letzten Tag -> "vX.Y.Z-N-gSHA" (git describes eigenes Format).
+          # Noch keine Tags im Repo -> Fallback auf den kurzen Commit-SHA.
+          version=$(git describe --tags --always)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            tags="${image}:${{ github.ref_name }}
+          ${image}:stable"
+          else
+            tags="${image}:latest"
+          fi
+          {
+            echo "tags<<EOF"
+            echo "$tags"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build (und Push, außer bei PRs)
         uses: docker/build-push-action@v6
@@ -63,7 +75,33 @@ jobs:
           # PRs: nur amd64 bauen (schneller, nur Smoke-Test). Main/Tags: beide Architekturen.
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
           push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: |
+            org.opencontainers.image.title=BonSync
+            org.opencontainers.image.description=Supermarkt-Kassenbon-Hub (REWE, PENNY, ROSSMANN, LIDL)
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Ohne diese beiden hängt buildx an jeden Push automatisch eine
+          # Provenance-/SBOM-Attestation als eigenes Manifest an, die in GHCR als
+          # untagged, unreferenzierte "Version" landet und nie aufgeräumt wird --
+          # das ist der Hauptgrund für den Cleanup-Job unten.
+          provenance: false
+          sbom: false
+
+  cleanup:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Untagged Image-Versionen löschen
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: bonsync
+          package-type: container
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: true

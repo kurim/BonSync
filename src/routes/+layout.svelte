@@ -38,7 +38,11 @@
 		<aside class="sidebar" class:compact={sidebarCollapsed}>
 			<div class="brand">
 				<div class="brand-mark"><img src="/logos/bonsync.png" alt="BonSync" /></div>
-				<div class="brand-text"><b>BonSync</b><span>KASSENBON&nbsp;HUB</span></div>
+				<div class="brand-text">
+						<b>BonSync</b>
+						<span>KASSENBON&nbsp;HUB</span>
+						<span class="brand-version">{data.appVersion}</span>
+					</div>
 				<button type="button" class="collapse-toggle" onclick={toggleSidebar} title={sidebarCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'}>
 					<i class="fa-solid fa-chevron-left" style="font-size:12px;"></i>
 				</button>

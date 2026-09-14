@@ -20,6 +20,10 @@ RUN npx playwright install --with-deps chromium
 FROM node:26-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+# Von der CI mitgegeben (git describe, z.B. "v1.0.0"); ohne --build-arg beim lokalen
+# `docker compose up --build` bleibt es bei "dev". Wird unten in der UI angezeigt.
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION
 # node:sqlite ist in älteren 22.x-Patches noch hinter diesem Flag (in neueren
 # Patches bereits Default-an) -- explizit setzen macht es versionsunabhängig sicher.
 ENV NODE_OPTIONS=--experimental-sqlite

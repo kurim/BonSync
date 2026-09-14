@@ -59,8 +59,9 @@ möglicherweise falsche Adresse zu zeigen.
 
 Fertige Images liegen in der GitHub Container Registry
 (`ghcr.io/kurim/bonsync`, für `amd64` und `arm64`) — selbst bauen ist nicht
-nötig. `latest` folgt dem `main`-Branch, Release-Tags (`v1.2.3`) bekommen
-zusätzlich `1.2.3`, `1.2` und `1`.
+nötig. `latest` folgt dem `main`-Branch (bleeding edge). Release-Tags
+(`v1.2.3`) bekommen zusätzlich das exakte Tag (`v1.2.3`, unveränderlich) sowie
+`stable`, das immer auf den neuesten Release zeigt.
 
 ```bash
 cp .env.example .env   # anpassen
