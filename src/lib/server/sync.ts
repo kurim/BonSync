@@ -1,3 +1,4 @@
+import { resolve, sep } from 'node:path';
 import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { credentials, receipts, receiptItems, storeModules, appSettings } from './db/schema';
@@ -274,6 +275,15 @@ export function pdfDir(storeId: StoreId): string {
 	return `${process.env.DATA_DIR ?? './data'}/receipts/${storeId}`;
 }
 
+/** Dateipfad des lokal abgelegten Beleg-PDFs. `externalId` stammt aus der Händler-API (über das
+ * Modul), ist also Fremddaten -- wird daher URL-kodiert (typische Ids aus Buchstaben/Ziffern/
+ * `-_.` bleiben dabei unverändert, bestehende Dateien behalten ihren Namen) und der aufgelöste
+ * Pfad muss nachweislich innerhalb des Store-Verzeichnisses liegen. */
 export function pdfPath(storeId: StoreId, externalId: string): string {
-	return `${pdfDir(storeId)}/${externalId}.pdf`;
+	const dir = resolve(pdfDir(storeId));
+	const file = resolve(dir, `${encodeURIComponent(externalId)}.pdf`);
+	if (!file.startsWith(dir + sep)) {
+		throw new Error(`Ungültige Beleg-ID "${externalId}" für Markt "${storeId}".`);
+	}
+	return file;
 }

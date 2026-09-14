@@ -5,8 +5,11 @@
 # node:sqlite braucht ebenfalls keine native Compile-Toolchain, das bleibt unverändert einfach.
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
-COPY package.json package-lock.json* .npmrc ./
-RUN npm install
+# `npm ci` statt `npm install`: installiert exakt den Stand aus package-lock.json (Lockfile ist
+# Pflicht) -- ein Image-Build zieht damit nie stillschweigend neuere transitive Versionen als die
+# lokal getesteten. legacy-peer-deps aus .npmrc gilt für npm ci genauso.
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci
 COPY . .
 RUN npm run build
 RUN npm prune --omit=dev

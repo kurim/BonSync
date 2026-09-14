@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, lt } from 'drizzle-orm';
 import { db } from '../db';
 import { pkceStates } from '../db/schema';
 import { generateCodeVerifier, generateCodeChallenge, generateState } from '../pkce';
@@ -43,6 +43,15 @@ export interface ModuleSdk {
 	};
 }
 
+// Ein PKCE-Login-Versuch (Authorize-URL öffnen, einloggen, Code einfügen) ist in wenigen Minuten
+// erledigt -- alles Ältere ist ein abgebrochener Versuch und wird beim nächsten Zugriff entsorgt,
+// statt für immer als gültiger state in der Tabelle zu bleiben.
+const PKCE_TTL_MS = 10 * 60_000;
+
+async function pruneExpiredPkceStates(): Promise<void> {
+	await db.delete(pkceStates).where(lt(pkceStates.createdAt, Date.now() - PKCE_TTL_MS)).run();
+}
+
 export function createSdkForModule(moduleId: string): ModuleSdk {
 	return {
 		http: { rawRequest, requestJson, formBody },
@@ -51,9 +60,11 @@ export function createSdkForModule(moduleId: string): ModuleSdk {
 			generateCodeChallenge,
 			generateState,
 			async saveState(state, codeVerifier) {
+				await pruneExpiredPkceStates();
 				await db.insert(pkceStates).values({ state, storeId: moduleId, codeVerifier, createdAt: Date.now() }).run();
 			},
 			async consumeState(state) {
+				await pruneExpiredPkceStates();
 				const pending = await db.select().from(pkceStates).where(eq(pkceStates.state, state)).get();
 				if (!pending || pending.storeId !== moduleId) return null;
 				await db.delete(pkceStates).where(eq(pkceStates.state, state)).run();

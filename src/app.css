@@ -1,5 +1,19 @@
 @import "tailwindcss";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
+/* Schriften selbst ausgeliefert (statt Google Fonts, siehe app.html) -- gleiche Familiennamen wie
+   zuvor ("Manrope", "JetBrains Mono", "Inter"), daher keine Änderung an den font-family-Regeln. */
+@import "@fontsource/manrope/500.css";
+@import "@fontsource/manrope/600.css";
+@import "@fontsource/manrope/700.css";
+@import "@fontsource/manrope/800.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/600.css";
+@import "@fontsource/jetbrains-mono/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
 @config "../tailwind.config.js";
 
 /* "Midnight Ledger" — Farbschema aus _redesign/DESIGN.md. Nur noch Dark (das Mockup kennt kein

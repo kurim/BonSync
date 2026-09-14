@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { StoreModule, StoreModuleMeta } from './types';
 import { parseManifest, type ModuleManifest } from './manifest';
@@ -70,7 +70,9 @@ async function resolveModuleFromDirectory(dir: string): Promise<LoadedModule> {
 	const manifest = parseManifest(readFileSync(manifestPath, 'utf8'));
 
 	const entryPath = resolve(absoluteDir, manifest.entry);
-	if (!entryPath.startsWith(absoluteDir)) {
+	// Mit Trenner vergleichen -- ohne ihn würde ".../modules/rewe-evil/index.js" den Prefix
+	// ".../modules/rewe" ebenfalls erfüllen.
+	if (!entryPath.startsWith(absoluteDir + sep)) {
 		throw new Error(`${absoluteDir}: entry "${manifest.entry}" verlässt das Paketverzeichnis.`);
 	}
 	if (!existsSync(entryPath)) {

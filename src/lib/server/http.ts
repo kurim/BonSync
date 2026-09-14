@@ -26,13 +26,22 @@ export function rawRequest(
 ): Promise<HttpResponse> {
 	return new Promise((resolve, reject) => {
 		const u = new URL(url);
+		if (u.protocol !== 'https:') {
+			return reject(new Error(`Nur https-URLs erlaubt: ${url}`));
+		}
+		// Nur die vier mTLS-Felder gezielt übernehmen statt das ganze Objekt zu spreaden -- ein
+		// Modul könnte sonst z.B. rejectUnauthorized:false hineinschmuggeln und die
+		// Zertifikatsprüfung für seine Requests abschalten.
+		const tls = options.tls
+			? { cert: options.tls.cert, key: options.tls.key, pfx: options.tls.pfx, passphrase: options.tls.passphrase }
+			: {};
 		const reqOptions: RequestOptions = {
 			method: options.method ?? 'GET',
 			hostname: u.hostname,
 			port: u.port || 443,
 			path: u.pathname + u.search,
 			headers: options.headers,
-			...options.tls
+			...tls
 		};
 		const req = httpsRequest(reqOptions, (res) => {
 			const chunks: Buffer[] = [];

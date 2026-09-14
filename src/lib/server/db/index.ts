@@ -133,7 +133,8 @@ export function ensureSchema() {
 		'ALTER TABLE app_settings ADD COLUMN sync_interval_minutes INTEGER NOT NULL DEFAULT 60',
 		'ALTER TABLE app_settings ADD COLUMN builtin_modules_seeded_at INTEGER',
 		'ALTER TABLE receipts ADD COLUMN pdf_unavailable INTEGER NOT NULL DEFAULT 0',
-		'ALTER TABLE app_settings ADD COLUMN onboarding_completed_at INTEGER'
+		'ALTER TABLE app_settings ADD COLUMN onboarding_completed_at INTEGER',
+		'ALTER TABLE app_settings ADD COLUMN mqtt_tls INTEGER NOT NULL DEFAULT 0'
 	]) {
 		try {
 			sqlite.exec(ddl);
