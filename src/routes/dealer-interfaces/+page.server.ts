@@ -1,15 +1,11 @@
-import { readFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { eq, inArray } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { storeModules, receipts, receiptItems, credentials, installedModules } from '$lib/server/db/schema';
-import { listMetas, getMeta, getModule, getLoaded, resolveUi, modulesDir, unregisterModule } from '$lib/server/modules/registry';
-import { stageZip, commitStagedInstall, isValidStagingDir } from '$lib/server/modules/packageInstaller';
-import { parseManifest } from '$lib/server/modules/manifest';
+import { listMetas, getModule, getLoaded, resolveUi, modulesDir, unregisterModule } from '$lib/server/modules/registry';
 import { loadCredentials, saveCredentials, syncStore, reprocessStore, isReprocessing, pdfDir } from '$lib/server/sync';
-import { geocodeAddress, mapTileUrlTemplate } from '$lib/server/geocoding';
 import type { StoreId } from '$lib/server/modules/types';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -24,17 +20,6 @@ function capabilityTags(id: StoreId): string[] {
 	if (module.refreshMarketInfo) tags.push('Markt-Auflösung');
 	return tags;
 }
-
-/** Reale, pro Modul unterschiedliche Login-/Transport-Mechanik der 4 eingebauten Module (siehe
- * jeweilige Autoren-Quelle in modules-src/) — kein Marketing-Text, sondern was das Modul
- * tatsächlich tut. Für jedes andere (hochgeladene) Modul greift stattdessen dessen eigenes
- * `authDescription`-Manifestfeld, siehe resolveUi/getLoaded unten. */
-const AUTH_DESCRIPTIONS: Record<StoreId, string> = {
-	rewe: 'REST-Client · mTLS · OAuth 2.0 (PKCE)',
-	penny: 'REST-Client · OAuth 2.0 (PKCE, Keycloak)',
-	lidl: 'REST-Client · OAuth 2.0 (PKCE, Duende)',
-	rossmann: 'REST-Client · E-Mail/Passwort · Zwei-Stufen-Token'
-};
 
 export const load: PageServerLoad = async () => {
 	const rows = await db.select().from(storeModules).all();
@@ -69,7 +54,7 @@ export const load: PageServerLoad = async () => {
 				monthCents: monthMatching.reduce((sum, r) => sum + r.totalCents, 0),
 				hasCredentials: creds !== null,
 				capabilities: meta.implemented ? capabilityTags(meta.id) : [],
-				authDescription: AUTH_DESCRIPTIONS[meta.id] ?? getLoaded(meta.id)?.authDescription,
+				authDescription: getLoaded(meta.id)?.authDescription,
 				version: getLoaded(meta.id)?.manifest.version,
 				ui: resolveUi(meta.id),
 				reprocessing: isReprocessing(meta.id)
@@ -112,40 +97,6 @@ export const load: PageServerLoad = async () => {
 		}
 	}
 
-	// Filialen mit echten Adressdaten gruppieren + zählen (Kartenmarker + Liste) -- ohne
-	// marketStreet ist keine sinnvolle Geocoding-Anfrage möglich, solche Belege werden hier
-	// nicht als eigene Filiale gezählt (fließen aber weiterhin normal in die Kassenzettel-Liste).
-	const filialeMap = new Map<
-		string,
-		{ storeId: StoreId; name: string; street: string; zip: string; city: string; count: number }
-	>();
-	for (const r of allReceipts) {
-		if (!r.marketStreet || !r.marketCity) continue;
-		const key = `${r.storeId}|${r.marketStreet}|${r.marketZip}|${r.marketCity}`;
-		const existing = filialeMap.get(key);
-		if (existing) {
-			existing.count++;
-		} else {
-			filialeMap.set(key, {
-				storeId: r.storeId as StoreId,
-				name: r.marketName ?? 'Unbekannter Markt',
-				street: r.marketStreet,
-				zip: r.marketZip ?? '',
-				city: r.marketCity,
-				count: 1
-			});
-		}
-	}
-	const filialenSorted = [...filialeMap.values()].sort((a, b) => b.count - a.count);
-
-	const filialen = await Promise.all(
-		filialenSorted.map(async (f) => {
-			const address = `${f.street}, ${f.zip} ${f.city}`.trim();
-			const geo = await geocodeAddress(address);
-			return { ...f, address, lat: geo?.lat ?? null, lon: geo?.lon ?? null };
-		})
-	);
-
 	return {
 		stores,
 		syncStatus: { enabledCount, connectedCount, lastSyncAt, erroringStore },
@@ -155,9 +106,7 @@ export const load: PageServerLoad = async () => {
 		totalSavingsCents,
 		totalCoupons,
 		receiptsWithSavings,
-		monthLabel,
-		filialen,
-		mapTileUrl: mapTileUrlTemplate()
+		monthLabel
 	};
 };
 
@@ -284,70 +233,5 @@ export const actions: Actions = {
 		await rm(join(modulesDir(), id), { recursive: true, force: true });
 
 		return { success: true, storeId: id, uninstalled: true };
-	},
-
-	/** Erster Schritt der Zip-Installation: extrahiert + validiert (inkl. probeweisem Laden,
-	 * siehe stageZip) das hochgeladene Paket in ein Staging-Verzeichnis, committet aber noch
-	 * nichts. Der `stagingDir`-Pfad reist als verstecktes Feld zum Client und mit
-	 * `installConfirm`/`cancelInstall` zurück -- dort erneut gegen Manipulation geprüft
-	 * (siehe isValidStagingDir). */
-	installPreview: async ({ request }) => {
-		const data = await request.formData();
-		const file = data.get('file');
-		if (!(file instanceof File) || file.size === 0) {
-			return fail(400, { installError: 'Bitte eine Zip-Datei auswählen.' });
-		}
-
-		try {
-			const buffer = Buffer.from(await file.arrayBuffer());
-			const { stagingDir, manifest } = await stageZip(buffer);
-			return {
-				installPreview: {
-					stagingDir,
-					id: manifest.id,
-					displayName: manifest.displayName,
-					version: manifest.version,
-					author: manifest.author ?? null,
-					description: manifest.description ?? null,
-					loginStrategyKind: manifest.loginStrategy.kind,
-					alreadyInstalled: Boolean(getMeta(manifest.id)),
-					installedVersion: getLoaded(manifest.id)?.manifest.version ?? null
-				}
-			};
-		} catch (err) {
-			return fail(400, { installError: err instanceof Error ? err.message : String(err) });
-		}
-	},
-
-	/** Zweiter Schritt: committet ein zuvor gestagtes Paket. Liest das Manifest erneut selbst aus
-	 * dem Staging-Verzeichnis (statt einem clientseitig mitgeschickten Wert zu vertrauen). */
-	installConfirm: async ({ request }) => {
-		const data = await request.formData();
-		const stagingDir = String(data.get('stagingDir') ?? '');
-		const overwrite = data.get('overwrite') === 'true';
-
-		if (!isValidStagingDir(stagingDir)) {
-			return fail(400, { installError: 'Ungültige oder abgelaufene Installationssitzung -- bitte Zip erneut hochladen.' });
-		}
-
-		try {
-			const manifest = parseManifest(readFileSync(join(stagingDir, 'manifest.yaml'), 'utf8'));
-			await commitStagedInstall(stagingDir, manifest, { overwrite, source: 'uploaded' });
-			await db.insert(storeModules).values({ id: manifest.id }).onConflictDoNothing().run();
-			return { installedId: manifest.id };
-		} catch (err) {
-			return fail(400, { installError: err instanceof Error ? err.message : String(err) });
-		}
-	},
-
-	/** Verwirft eine noch nicht bestätigte Installation (Klick auf "Abbrechen" in der Vorschau)
-	 * -- löscht das Staging-Verzeichnis, damit es nicht dauerhaft unter DATA_DIR liegen bleibt. */
-	cancelInstall: async ({ request }) => {
-		const data = await request.formData();
-		const stagingDir = String(data.get('stagingDir') ?? '');
-		if (isValidStagingDir(stagingDir)) {
-			await rm(stagingDir, { recursive: true, force: true });
-		}
-		return { installPreview: null };
 	}
 };

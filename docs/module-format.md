@@ -1,8 +1,10 @@
 # BonSync Modul-Format
 
 Dieses Dokument beschreibt, wie ein Händler-Modul für BonSync aufgebaut sein muss, damit es
-installiert werden kann — sowohl für die 4 mitgelieferten Module (REWE, PENNY, LIDL, ROSSMANN,
-siehe `modules-src/`) als auch für eigene, per Zip hochgeladene Module.
+installiert werden kann. BonSync selbst liefert keine Module mehr mit — die offiziellen Module
+(REWE, PENNY, LIDL, ROSSMANN, FRESSNAPF, OBI) liegen als Referenzimplementierung im separaten
+[BonSync-Store](https://github.com/kurim/BonSync-Store)-Repo, installierbar direkt über den
+Modul-Store. Dieses Dokument gilt unverändert für eigene, per Zip hochgeladene Module.
 
 ## 1. Überblick & Vertrauensmodell
 
@@ -16,8 +18,9 @@ BonSync-Server selbst, im selben Node-Prozess. Es gibt keine technische Beschrä
 Modul tun kann (Netzwerkzugriff, Dateisystem, etc.) — das ist eine bewusste Design-Entscheidung
 für eine selbst gehostete Single-User-App, die nur der Betreiber selbst administriert. Installiere
 daher **nur Module, denen du vertraust** — genau wie bei jeder anderen Software/Dependency auch.
-Die eingebauten Module (`modules-src/`) unterliegen exakt denselben Regeln wie jedes andere
-installierte Modul; es gibt keinen privilegierten "Kern".
+Auch die Module aus dem offiziellen [BonSync-Store](https://github.com/kurim/BonSync-Store)
+unterliegen exakt denselben Regeln wie jedes selbst hochgeladene Modul; es gibt keinen
+privilegierten "Kern".
 
 ## 2. Paket-Layout
 
@@ -38,9 +41,10 @@ mein-modul-1.0.0.zip
   `import './lib/helpers.js'`), wird ganz normal von Node aufgelöst, da das Paket nach der
   Installation unverändert als Verzeichnis auf der Platte liegt.
 - **Das Format ist fertiges, gebautes ESM-JavaScript** — kein TypeScript, keine Laufzeit-
-  Transpilation. Schreibst du dein Modul in TypeScript (empfohlen, siehe `modules-src/` als
-  Vorlage), baue es vorher zu JavaScript, z.B. mit `esbuild --bundle --format=esm --platform=node`
-  (genau das macht `modules-src/build.mjs` für die 4 eingebauten Module).
+  Transpilation. Schreibst du dein Modul in TypeScript (empfohlen, siehe die Module im
+  [BonSync-Store](https://github.com/kurim/BonSync-Store)-Repo als Vorlage), baue es vorher zu
+  JavaScript, z.B. mit `esbuild --bundle --format=esm --platform=node` (genau das macht
+  `scripts/build-store.mjs` dort für jedes Modul).
 - **Keine npm-Abhängigkeiten mitbündeln, die BonSync bereits als Fähigkeit anbietet** (siehe
   Abschnitt 5, Module-SDK) — schwere Pakete wie PDF- oder Headless-Browser-Bibliotheken sollen
   nicht pro Modul dupliziert werden.
@@ -68,7 +72,7 @@ Felder ohne `ui`-Angaben bekommen automatisch einen generischen, aber konsistent
 (deterministische Farbe aus der `id`, Kürzel aus `displayName`) — ein Modul ganz ohne `ui`-Block
 ist also vollkommen gültig.
 
-### Beispiel (REWE, siehe `modules-src/rewe/manifest.yaml`)
+### Beispiel (REWE, siehe [`rewe/module/manifest.yaml`](https://github.com/kurim/BonSync-Store/blob/main/rewe/module/manifest.yaml) im BonSync-Store)
 
 ```yaml
 manifestVersion: 1
@@ -155,8 +159,8 @@ Wichtig, weil BonSync diese Felder 1:1 in feste Datenbankspalten schreibt (`src/
   einfach `NULL`, statt einen Platzhalter zu erfinden.
 - **Bei `providesPdf: false` ist diese Adresse die einzige Quelle für Marktdaten** — ohne PDF
   kann BonSync sie nicht nachträglich per Text-Parsing ergänzen (wie es z.B. `parseMarketHeader`
-  für REWE aus dem PDF-Kopf tut, siehe `modules-src/_shared/posParser.ts`). Das Mapping muss hier
-  also schon beim ersten Anlauf stimmen.
+  für REWE aus dem PDF-Kopf tut, siehe [`rewe/_shared/posParser.ts`](https://github.com/kurim/BonSync-Store/blob/main/rewe/_shared/posParser.ts)
+  im BonSync-Store). Das Mapping muss hier also schon beim ersten Anlauf stimmen.
 
 ## 5. Module-SDK-Referenz
 
@@ -196,8 +200,8 @@ dieselbe Datei aufmachen), und `pdf`/`html` kapseln schwere npm-Abhängigkeiten 
 `playwright`), die nicht pro Modul erneut mitgebündelt werden sollen.
 
 **Eigene, store-spezifische Logik gehört dagegen ins Modul selbst**, nicht ins SDK — allen voran
-die PDF-/HTML-Text-Erkennung der Artikelzeilen (siehe `modules-src/_shared/posParser.ts` für das
-generische REWE/PENNY/ROSSMANN-Kassenformat bzw. `modules-src/lidl/parser.ts` für LIDLs
+die PDF-/HTML-Text-Erkennung der Artikelzeilen (siehe im BonSync-Store `rewe/_shared/posParser.ts`
+für das generische REWE/PENNY/ROSSMANN-Kassenformat bzw. `lidl/module/parser.ts` für LIDLs
 abweichendes Format als Beispiel für ein komplett eigenes, privates Format). Jedes Modul bringt
 seine Erkennungslogik unabhängig mit — ein künftiges Modul mit einem dritten Format forkt sich
 einfach seine eigene Variante, ohne ein bestehendes Modul zu beeinflussen.
@@ -276,15 +280,17 @@ Diese Zip-Datei kann direkt über die Oberfläche hochgeladen werden.
 
 ## 7. Installieren / Deinstallieren
 
-**Installieren** — unter **Händler-Schnittstellen**, Kachel "Weiteres Modul installieren": Zip
-auswählen, Vorschau (Name/Version/Autor/Beschreibung/Login-Art) prüfen. Ist die `id` bereits
-installiert, erscheint eine "Überschreiben"-Checkbox — Belege/Zugangsdaten bleiben dabei
-unangetastet, nur Code+Manifest werden ersetzt.
+**Installieren** — entweder mit einem Klick über den **Modul-Store** (Katalog aus dem
+[BonSync-Store](https://github.com/kurim/BonSync-Store), inkl. SHA-256-Prüfung des Downloads), oder
+manuell über die **Dangerzone** am Ende derselben Seite: Zip auswählen, Vorschau
+(Name/Version/Autor/Beschreibung/Login-Art) prüfen. Ist die `id` bereits installiert, erscheint eine
+"Überschreiben"-Checkbox — Belege/Zugangsdaten bleiben dabei unangetastet, nur Code+Manifest werden
+ersetzt.
 
 **Deinstallieren** — über das ⋮-Menü der jeweiligen Modul-Karte, "Modul deinstallieren". Eine
 Rückfrage bietet die Checkbox "Auch vorhandene Daten löschen" (Belege, Artikel, Zugangsdaten,
 heruntergeladene PDFs) — standardmäßig **nicht** angehakt. Ohne Häkchen bleibt die komplette
 Sync-Historie erhalten, und eine spätere Neuinstallation derselben `id` knüpft nahtlos daran an.
 
-Beide Aktionen funktionieren identisch für die 4 eingebauten Module wie für jedes selbst
-installierte — es gibt keinen technischen Unterschied zwischen "eingebaut" und "hochgeladen".
+Beide Aktionen funktionieren identisch, egal ob ein Modul aus dem BonSync-Store installiert oder
+selbst per Zip hochgeladen wurde — es gibt keinen technischen Unterschied in der Behandlung.

@@ -20,8 +20,8 @@ export interface ModuleManifest {
 	author?: string;
 	description?: string;
 	authDescription?: string;
-	/** Ob der Händler überhaupt jemals ein Beleg-PDF liefert (Default: true, deckt alle 4
-	 * eingebauten Module ab). Für Module ohne PDF (z.B. wenn der Händler nur strukturierte
+	/** Ob der Händler überhaupt jemals ein Beleg-PDF liefert (Default: true). Für Module ohne PDF
+	 * (z.B. wenn der Händler nur strukturierte
 	 * Artikeldaten liefert) auf `false` setzen -- sonst wartet die App dauerhaft auf ein PDF, das
 	 * nie kommt: die Beleg-Detailseite zeigt permanent "Noch nicht vollständig geladen" und lädt
 	 * bei jedem Seitenaufruf erneut nach, siehe receipts/[id]/+page.server.ts. */

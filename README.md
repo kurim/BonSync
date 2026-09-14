@@ -19,7 +19,8 @@ npm run dev
 
 Das REWE-mTLS-Zertifikat ist eine feste App-Ressource (identisch für jede
 Installation der offiziellen REWE-App, siehe `docs/api-rewe.md` Abschnitt 1.1)
-und reist direkt im REWE-Modul-Paket mit (`modules-src/rewe/`) — kein
+und reist direkt im REWE-Modul-Paket mit (Quelle: `rewe/module/` im
+[BonSync-Store](https://github.com/kurim/BonSync-Store)-Repo) — kein
 manuelles Bereitstellen mehr nötig. `REWE_CERT_DIR` in `.env` bleibt als
 optionaler Override verfügbar, falls REWE das Zertifikat rotiert.
 
