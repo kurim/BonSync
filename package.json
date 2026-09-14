@@ -1,0 +1,48 @@
+{
+  "name": "bonsync",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node build/index.js",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "db:generate": "drizzle-kit generate",
+    "build:modules": "node modules-src/build.mjs"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^5.5.7",
+    "@sveltejs/kit": "^2.70.3",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^22.10.1",
+    "@types/yauzl": "^2.10.3",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.25.12",
+    "svelte": "^5.57.0",
+    "svelte-check": "^4.7.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.0",
+    "yazl": "^3.3.1"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "drizzle-orm": "^0.45.2",
+    "leaflet": "^1.9.4",
+    "mqtt": "^5.15.2",
+    "pdfjs-dist": "^5.4.296",
+    "playwright": "^1.49.1",
+    "yaml": "^2.7.0",
+    "yauzl": "^3.2.0"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
+  }
+}
