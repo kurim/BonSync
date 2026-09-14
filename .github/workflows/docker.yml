@@ -98,10 +98,17 @@ jobs:
     permissions:
       packages: write
     steps:
-      - name: Untagged Image-Versionen löschen
-        uses: actions/delete-package-versions@v5
+      # NICHT actions/delete-package-versions: das kennt keine Multi-Arch-Manifestlisten und hat
+      # uns damit bereits einmal :latest zerschossen -- es löscht "untagged" Versionen blind, aber
+      # bei einem Multi-Arch-Image (buildx) sind die einzelnen amd64/arm64-Kind-Manifeste selbst
+      # untagged und werden nur über den getaggten Index referenziert. Landen sie auf der
+      # Löschliste, zeigt :latest/:stable danach auf ein Manifest, das nicht mehr existiert
+      # ("manifests/sha256:... not found" beim Pull). ghcr-cleanup-action kennt Manifestlisten und
+      # rechnet referenzierte Kind-Manifeste korrekt aus der Löschmenge heraus.
+      - name: Verwaiste Image-Versionen löschen (Multi-Arch-sicher)
+        uses: dataaxiom/ghcr-cleanup-action@v1
         with:
-          package-name: bonsync
-          package-type: container
-          min-versions-to-keep: 0
-          delete-only-untagged-versions: true
+          package: bonsync
+          delete-untagged: true
+          exclude-tags: latest,stable
+          validate: true
