@@ -1,7 +1,7 @@
-import { eq, lt } from 'drizzle-orm';
+import { eq, lt, ne } from 'drizzle-orm';
 import { db, ensureSchema } from './db';
 import { appSettings, sessions } from './db/schema';
-import { hashPassword, verifyPassword, randomToken } from './crypto';
+import { hashPassword, verifyPassword, randomToken, isPlaceholderSecret } from './crypto';
 
 export const SESSION_COOKIE = 'bonsync_session';
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 Tage
@@ -13,12 +13,12 @@ export async function bootstrapSettings() {
 	if (existing) return;
 
 	const initialPassword = process.env.APP_PASSWORD;
-	if (!initialPassword) {
+	if (isPlaceholderSecret(initialPassword) || initialPassword!.length < 8) {
 		throw new Error(
-			'Keine app_settings-Zeile vorhanden und APP_PASSWORD nicht gesetzt — bitte in .env setzen (einmaliges Bootstrap-Passwort, danach in den Einstellungen änderbar).'
+			'Keine app_settings-Zeile vorhanden und APP_PASSWORD fehlt, ist kürzer als 8 Zeichen oder noch der Beispielwert aus .env.example — bitte ein eigenes Bootstrap-Passwort in .env setzen (danach in den Einstellungen änderbar).'
 		);
 	}
-	await db.insert(appSettings).values({ id: 1, passwordHash: hashPassword(initialPassword) }).run();
+	await db.insert(appSettings).values({ id: 1, passwordHash: hashPassword(initialPassword!) }).run();
 }
 
 export async function getSettings() {
@@ -32,8 +32,16 @@ export async function checkPassword(password: string): Promise<boolean> {
 	return verifyPassword(password, settings.passwordHash);
 }
 
-export async function setPassword(newPassword: string) {
+/** Setzt ein neues Passwort und widerruft dabei alle anderen Sessions -- wer nach einem
+ * Verdacht das Passwort ändert, wirft damit auch einen evtl. mitlesenden Dritten raus. Die
+ * aktuelle Session (`keepToken`, das Cookie des Aufrufers) bleibt bestehen, damit der Nutzer
+ * nicht direkt nach dem Ändern ausgeloggt wird. */
+export async function setPassword(newPassword: string, keepToken?: string) {
 	await db.update(appSettings).set({ passwordHash: hashPassword(newPassword) }).where(eq(appSettings.id, 1)).run();
+	await db
+		.delete(sessions)
+		.where(keepToken ? ne(sessions.token, keepToken) : undefined)
+		.run();
 }
 
 /** true, solange der Einrichtungsassistent (siehe routes/onboarding) noch nicht abgeschlossen

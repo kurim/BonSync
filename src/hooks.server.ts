@@ -56,5 +56,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	return resolve(event);
+	const response = await resolve(event);
+
+	// Basis-Security-Header für jede Antwort (die Content-Security-Policy selbst kommt aus
+	// svelte.config.js#kit.csp, damit SvelteKit sein Init-Skript passend mit Nonce versieht).
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('Referrer-Policy', 'same-origin');
+	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+	if (process.env.COOKIE_SECURE === 'true') {
+		// Nur sinnvoll, wenn die Instanz tatsächlich per HTTPS erreichbar ist (gleiche Bedingung wie
+		// das Secure-Flag des Session-Cookies) -- sonst würde HSTS eine http://-Heimnetz-Instanz
+		// für den Browser dauerhaft unerreichbar machen.
+		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+	}
+	return response;
 };

@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { checkPassword, setPassword, completeOnboarding } from '$lib/server/auth';
+import { checkPassword, setPassword, completeOnboarding, SESSION_COOKIE } from '$lib/server/auth';
 import { fetchStoreCatalog, installFromCatalogEntry } from '$lib/server/modules/storeCatalog';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -15,7 +15,7 @@ export const actions: Actions = {
 	/** Schritt 1 -- gleiche Validierung wie settings/+page.server.ts#changePassword (bewusst
 	 * dupliziert statt geteilt: nur 2 Aufrufstellen, die Logik ist winzig). "Überspringen" im
 	 * Client löst keinen Server-Call aus, sondern schaltet nur lokal auf Schritt 2 um. */
-	changePassword: async ({ request }) => {
+	changePassword: async ({ request, cookies }) => {
 		const data = await request.formData();
 		const current = String(data.get('currentPassword') ?? '');
 		const next = String(data.get('newPassword') ?? '');
@@ -25,7 +25,7 @@ export const actions: Actions = {
 		if (next.length < 8) return fail(400, { passwordError: 'Neues Passwort muss mind. 8 Zeichen haben.' });
 		if (next !== confirm) return fail(400, { passwordError: 'Neue Passwörter stimmen nicht überein.' });
 
-		await setPassword(next);
+		await setPassword(next, cookies.get(SESSION_COOKIE));
 		return { passwordChanged: true };
 	},
 

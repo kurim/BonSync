@@ -1,11 +1,21 @@
 import { randomBytes, scryptSync, createCipheriv, createDecipheriv, timingSafeEqual } from 'node:crypto';
 
+/** Bekannte Beispielwerte aus (früheren) .env.example-Ständen -- werden hart abgelehnt, damit
+ * eine Instanz nie mit einem öffentlich dokumentierten Passwort/Secret läuft. */
+const PLACEHOLDER_SECRETS = new Set(['change-me', 'change-me-too-please-32-chars-min']);
+
+export function isPlaceholderSecret(value: string | undefined): boolean {
+	return !value || PLACEHOLDER_SECRETS.has(value.trim());
+}
+
 function appSecret(): string {
 	const secret = process.env.APP_SECRET;
-	if (!secret || secret.length < 16) {
-		throw new Error('APP_SECRET fehlt oder ist zu kurz (min. 16 Zeichen) — siehe .env.example');
+	if (isPlaceholderSecret(secret) || secret!.length < 16) {
+		throw new Error(
+			'APP_SECRET fehlt, ist zu kurz (min. 16 Zeichen) oder noch der Beispielwert aus .env.example — bitte einen eigenen Wert setzen (z.B. `openssl rand -base64 32`).'
+		);
 	}
-	return secret;
+	return secret!;
 }
 
 /** Verschlüsselt ein beliebiges JSON-Objekt at-rest (AES-256-GCM, Key via scrypt aus APP_SECRET + Salt). */

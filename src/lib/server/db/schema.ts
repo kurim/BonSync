@@ -85,6 +85,7 @@ export const appSettings = sqliteTable('app_settings', {
 	mqttPort: integer('mqtt_port'),
 	mqttUsername: text('mqtt_username'),
 	mqttPasswordEnc: text('mqtt_password_enc'),
+	mqttTls: integer('mqtt_tls', { mode: 'boolean' }).notNull().default(false),
 	mqttBaseTopic: text('mqtt_base_topic').default('bonsync/'),
 	mqttPublishNew: integer('mqtt_publish_new', { mode: 'boolean' }).notNull().default(true),
 	mqttPublishSummary: integer('mqtt_publish_summary', { mode: 'boolean' }).notNull().default(true),

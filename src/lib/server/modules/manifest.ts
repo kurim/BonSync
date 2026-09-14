@@ -6,7 +6,15 @@ import type { LoginStrategy } from './types';
  * potenziell fehlenden SDK-Fähigkeiten geladen zu werden. */
 export const CURRENT_SDK_VERSION = 1;
 
-const ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,31}$/;
+/** Gültige Modul-Ids -- zentral hier, weil die id auch als Verzeichnisname unter
+ * `${DATA_DIR}/modules/` und in rm-Aufrufen landet: jeder Eingangspunkt, der eine id von außen
+ * entgegennimmt (Formular-Actions, /module-assets, Store-Katalog), muss gegen dieses Muster
+ * prüfen, bevor die id irgendwo in einen Pfad fließt. */
+export const ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,31}$/;
+
+export function isValidModuleId(id: unknown): id is string {
+	return typeof id === 'string' && ID_PATTERN.test(id);
+}
 const LOGIN_STRATEGY_KINDS = ['oauth-pkce-manual', 'oauth-pkce-redirect', 'credentials'];
 
 export interface ModuleManifest {

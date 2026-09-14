@@ -11,6 +11,8 @@ interface MqttConfig {
 	port: number;
 	username: string;
 	password: string | null;
+	/** TLS (mqtts://) statt Klartext -- Zertifikat wird gegen die System-CAs geprüft. */
+	tls: boolean;
 	baseTopic: string;
 	publishNew: boolean;
 	publishSummary: boolean;
@@ -21,19 +23,39 @@ async function getMqttConfig(): Promise<MqttConfig | null> {
 	if (!settings?.mqttHost) return null;
 	return {
 		host: settings.mqttHost,
-		port: settings.mqttPort ?? 1883,
+		port: settings.mqttPort ?? (settings.mqttTls ? 8883 : 1883),
 		username: settings.mqttUsername ?? '',
 		password: settings.mqttPasswordEnc ? decryptJson<string>(settings.mqttPasswordEnc) : null,
+		tls: settings.mqttTls,
 		baseTopic: settings.mqttBaseTopic || 'bonsync/',
 		publishNew: settings.mqttPublishNew,
 		publishSummary: settings.mqttPublishSummary
 	};
 }
 
-function connect(config: Pick<MqttConfig, 'host' | 'port' | 'username' | 'password'>): mqtt.MqttClient {
-	return mqtt.connect(`mqtt://${config.host}:${config.port}`, {
+/** Lesbare Fehlerbeschreibung -- Node verpackt fehlgeschlagene Verbindungsversuche (IPv6 + IPv4
+ * getrennt, "Happy Eyeballs") in einen AggregateError mit LEERER message; nur `code` bzw. die
+ * inneren Fehler tragen den eigentlichen Grund (z.B. "connect ECONNREFUSED 127.0.0.1:8883"). */
+function describeError(err: unknown): string {
+	if (err instanceof Error) {
+		if (err.message) return err.message;
+		const agg = err as Error & { code?: string; errors?: unknown[] };
+		const inner = agg.errors?.find((e): e is Error => e instanceof Error && Boolean(e.message));
+		return inner?.message ?? agg.code ?? err.name;
+	}
+	return String(err);
+}
+
+function connect(config: Pick<MqttConfig, 'host' | 'port' | 'username' | 'password' | 'tls'>): mqtt.MqttClient {
+	// Host/Port als Optionen statt in einer zusammengebauten URL -- ein Host-String mit "/" oder
+	// "?" kann so nicht den Pfad/Query der Broker-URL verändern.
+	return mqtt.connect({
+		protocol: config.tls ? 'mqtts' : 'mqtt',
+		host: config.host,
+		port: config.port,
 		username: config.username || undefined,
 		password: config.password || undefined,
+		rejectUnauthorized: true,
 		connectTimeout: 8000,
 		reconnectPeriod: 0
 	});
@@ -47,7 +69,12 @@ async function withClient(config: MqttConfig, fn: (client: mqtt.MqttClient) => P
 	try {
 		await new Promise<void>((resolve, reject) => {
 			client.once('connect', () => resolve());
-			client.once('error', (err) => reject(err));
+			// Dauerhafter error-Listener statt `once`: der Client kann nach dem ersten Fehler weitere
+			// 'error'-Events feuern (IPv6-/IPv4-Versuch getrennt, TLS-Handshake, end()). Ohne
+			// Listener wäre das ein unbehandeltes 'error'-Event, das den gesamten Node-Prozess
+			// beendet -- ein nicht erreichbarer Broker darf den Server nicht abschießen. Ein
+			// erneutes reject() nach dem ersten ist für die Promise ein No-op.
+			client.on('error', (err) => reject(err));
 		});
 		await fn(client);
 	} finally {
@@ -129,7 +156,7 @@ export async function publishSyncUpdate(storeId: StoreId, newReceipts: ReceiptSu
 			}
 		});
 	} catch (err) {
-		console.error(`[mqtt] Veröffentlichen für "${storeId}" fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`);
+		console.error(`[mqtt] Veröffentlichen für "${storeId}" fehlgeschlagen: ${describeError(err)}`);
 	}
 }
 
@@ -141,19 +168,24 @@ export async function testMqttConnection(config: {
 	port: number;
 	username: string;
 	password: string | null;
+	tls: boolean;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
 	return new Promise((resolve) => {
 		let settled = false;
 		const client = connect(config);
+		const timer = setTimeout(() => finish({ ok: false, error: 'Zeitüberschreitung -- Broker antwortet nicht.' }), 9000);
 		const finish = (result: { ok: true } | { ok: false; error: string }) => {
 			if (settled) return;
 			settled = true;
-			client.removeAllListeners();
+			clearTimeout(timer);
 			client.end(true);
 			resolve(result);
 		};
 		client.once('connect', () => finish({ ok: true }));
-		client.once('error', (err) => finish({ ok: false, error: err.message }));
-		setTimeout(() => finish({ ok: false, error: 'Zeitüberschreitung -- Broker antwortet nicht.' }), 9000);
+		// Listener bewusst NICHT entfernen (kein removeAllListeners): nach dem ersten Fehler können
+		// weitere 'error'-Events folgen (getrennte IPv6-/IPv4-Versuche, TLS-Handshake, end()) --
+		// ein 'error' ohne Listener wäre eine unbehandelte Exception und würde den ganzen
+		// Server-Prozess beenden. `settled` sorgt dafür, dass nur der erste Fehler gemeldet wird.
+		client.on('error', (err) => finish({ ok: false, error: describeError(err) }));
 	});
 }

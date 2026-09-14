@@ -146,6 +146,17 @@
 						/>
 					</div>
 
+					<div class="flex items-center justify-between gap-space-md py-space-xs">
+						<div class="flex flex-col gap-0.5 min-w-0">
+							<span class="font-body-md text-body-md font-semibold text-on-surface">TLS-Verschlüsselung (mqtts)</span>
+							<span class="font-body-sm text-body-sm text-on-surface-variant">Verbindung zum Broker verschlüsseln -- Standard-Port dafür ist 8883; das Broker-Zertifikat muss von einer bekannten CA stammen.</span>
+						</div>
+						<div class="switch shrink-0">
+							<input type="checkbox" id="mqtt-tls" name="mqttTls" checked={data.settings.mqttTls} />
+							<label for="mqtt-tls"></label>
+						</div>
+					</div>
+
 					<div class="h-px w-full bg-surface-container-highest"></div>
 
 					<div class="flex items-center justify-between gap-space-md py-space-xs">

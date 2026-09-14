@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { appSettings } from '$lib/server/db/schema';
-import { checkPassword, setPassword, getSettings } from '$lib/server/auth';
+import { checkPassword, setPassword, getSettings, SESSION_COOKIE } from '$lib/server/auth';
 import { encryptJson, decryptJson } from '$lib/server/crypto';
 import { testMqttConnection } from '$lib/server/mqtt';
 import type { Actions, PageServerLoad } from './$types';
@@ -15,6 +15,7 @@ export const load: PageServerLoad = async () => {
 			mqttHost: settings.mqttHost ?? '',
 			mqttPort: settings.mqttPort ?? 1883,
 			mqttUsername: settings.mqttUsername ?? '',
+			mqttTls: settings.mqttTls,
 			// Das Passwort selbst wird nie ans Frontend zurückgegeben (auch nicht verschlüsselt) —
 			// nur ob eines hinterlegt ist, fürs Platzhalter-Verhalten im Formular.
 			mqttPasswordSet: Boolean(settings.mqttPasswordEnc),
@@ -27,7 +28,7 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	changePassword: async ({ request }) => {
+	changePassword: async ({ request, cookies }) => {
 		const data = await request.formData();
 		const current = String(data.get('currentPassword') ?? '');
 		const next = String(data.get('newPassword') ?? '');
@@ -37,7 +38,7 @@ export const actions: Actions = {
 		if (next.length < 8) return fail(400, { passwordError: 'Neues Passwort muss mind. 8 Zeichen haben.' });
 		if (next !== confirm) return fail(400, { passwordError: 'Neue Passwörter stimmen nicht überein.' });
 
-		await setPassword(next);
+		await setPassword(next, cookies.get(SESSION_COOKIE));
 		return { passwordChanged: true };
 	},
 
@@ -50,6 +51,7 @@ export const actions: Actions = {
 			mqttHost: String(data.get('mqttHost') ?? ''),
 			mqttPort: Number(data.get('mqttPort') ?? 1883),
 			mqttUsername: String(data.get('mqttUsername') ?? ''),
+			mqttTls: data.get('mqttTls') === 'on',
 			mqttBaseTopic: String(data.get('mqttBaseTopic') ?? 'bonsync/'),
 			mqttPublishNew: data.get('mqttPublishNew') === 'on',
 			mqttPublishSummary: data.get('mqttPublishSummary') === 'on',
@@ -76,6 +78,7 @@ export const actions: Actions = {
 
 		const port = Number(data.get('mqttPort') ?? 1883);
 		const username = String(data.get('mqttUsername') ?? '');
+		const tls = data.get('mqttTls') === 'on';
 		const passwordField = String(data.get('mqttPassword') ?? '');
 
 		let password: string | null = null;
@@ -86,7 +89,7 @@ export const actions: Actions = {
 			password = settings.mqttPasswordEnc ? decryptJson<string>(settings.mqttPasswordEnc) : null;
 		}
 
-		const result = await testMqttConnection({ host, port, username, password });
+		const result = await testMqttConnection({ host, port, username, password, tls });
 		return result.ok ? { mqttTestOk: true } : fail(400, { mqttTestError: result.error });
 	}
 };

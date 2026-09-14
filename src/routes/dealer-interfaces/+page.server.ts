@@ -1,13 +1,23 @@
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { eq, inArray } from 'drizzle-orm';
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { storeModules, receipts, receiptItems, credentials, installedModules } from '$lib/server/db/schema';
 import { listMetas, getModule, getLoaded, resolveUi, modulesDir, unregisterModule } from '$lib/server/modules/registry';
+import { isValidModuleId } from '$lib/server/modules/manifest';
 import { loadCredentials, saveCredentials, syncStore, reprocessStore, isReprocessing, pdfDir } from '$lib/server/sync';
 import type { StoreId } from '$lib/server/modules/types';
 import type { Actions, PageServerLoad } from './$types';
+
+/** Liest `storeId` aus dem Formular und lehnt alles ab, was nicht dem Modul-Id-Muster entspricht.
+ * Pflicht vor jeder Verwendung in DB-Filtern und vor allem in Pfaden (`uninstall` löscht
+ * Verzeichnisse rekursiv -- ein `..` als id würde sonst `${DATA_DIR}` selbst treffen). */
+function requireStoreId(data: FormData): StoreId {
+	const id = data.get('storeId');
+	if (!isValidModuleId(id)) throw error(400, 'Ungültige Modul-Id');
+	return id;
+}
 
 /** Echte, aus dem Modul-Interface abgeleitete Fähigkeiten statt erfundener Feature-Tags —
  * jedes Tag entspricht einer tatsächlich implementierten optionalen StoreModule-Methode. */
@@ -113,7 +123,7 @@ export const load: PageServerLoad = async () => {
 export const actions: Actions = {
 	toggle: async ({ request }) => {
 		const data = await request.formData();
-		const id = String(data.get('storeId')) as StoreId;
+		const id = requireStoreId(data);
 		const enabled = data.get('enabled') === 'true';
 		await db.update(storeModules).set({ enabled }).where(eq(storeModules.id, id)).run();
 		return { ok: true };
@@ -121,16 +131,21 @@ export const actions: Actions = {
 
 	oauthBeginLogin: async ({ request }) => {
 		const data = await request.formData();
-		const id = String(data.get('storeId')) as StoreId;
+		const id = requireStoreId(data);
 		const module = getModule(id);
 		if (!module?.beginLogin) return fail(400, { error: 'Modul unterstützt keinen Login-Start.', storeId: id });
 		const { url } = await module.beginLogin();
+		// Die URL landet im Client als href -- nur https zulassen, damit ein fehlerhaftes Modul
+		// keine javascript:/data:-URL in die Seite bringen kann.
+		if (!/^https:\/\//i.test(url)) {
+			return fail(400, { error: 'Modul lieferte eine ungültige Authorize-URL (nur https:// erlaubt).', storeId: id });
+		}
 		return { authorizeUrl: url, storeId: id };
 	},
 
 	oauthCompleteLogin: async ({ request }) => {
 		const data = await request.formData();
-		const id = String(data.get('storeId')) as StoreId;
+		const id = requireStoreId(data);
 		const redirectUrl = String(data.get('redirectUrl') ?? '');
 		const module = getModule(id);
 		if (!module?.completeLogin) return fail(400, { error: 'Modul unterstützt keinen Login-Abschluss.', storeId: id });
@@ -145,7 +160,7 @@ export const actions: Actions = {
 
 	credentialsLogin: async ({ request }) => {
 		const data = await request.formData();
-		const id = String(data.get('storeId')) as StoreId;
+		const id = requireStoreId(data);
 		const email = String(data.get('email') ?? '');
 		const password = String(data.get('password') ?? '');
 		const module = getModule(id);
@@ -165,7 +180,7 @@ export const actions: Actions = {
 	 * Bereits synchronisierte Belege bleiben erhalten -- nur die Verbindung wird gekappt. */
 	disconnect: async ({ request }) => {
 		const data = await request.formData();
-		const id = String(data.get('storeId')) as StoreId;
+		const id = requireStoreId(data);
 		await db.delete(credentials).where(eq(credentials.storeId, id)).run();
 		await db
 			.update(storeModules)
@@ -177,7 +192,7 @@ export const actions: Actions = {
 
 	syncOne: async ({ request }) => {
 		const data = await request.formData();
-		const id = String(data.get('storeId')) as StoreId;
+		const id = requireStoreId(data);
 		const result = await syncStore(id);
 		return { syncResult: result };
 	},
@@ -188,7 +203,7 @@ export const actions: Actions = {
 	 * von der Store-API nötig) keinen einzelnen Request minutenlang offen hält. */
 	reprocessAll: async ({ request }) => {
 		const data = await request.formData();
-		const id = String(data.get('storeId')) as StoreId;
+		const id = requireStoreId(data);
 		if (isReprocessing(id)) return { reprocessStoreId: id, alreadyRunning: true };
 		reprocessStore(id).catch((err) => console.error(`[reprocess] ${id} abgebrochen: ${err instanceof Error ? err.message : String(err)}`));
 		return { reprocessStoreId: id, started: true };
@@ -212,7 +227,7 @@ export const actions: Actions = {
 	 * daran nahtlos an (siehe ConfirmUninstallDialog.svelte für die Rückfrage). */
 	uninstall: async ({ request }) => {
 		const data = await request.formData();
-		const id = String(data.get('storeId')) as StoreId;
+		const id = requireStoreId(data);
 		const deleteData = data.get('deleteData') === 'true';
 
 		unregisterModule(id);

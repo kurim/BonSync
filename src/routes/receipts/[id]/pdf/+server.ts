@@ -25,10 +25,14 @@ export const GET: RequestHandler = async ({ params }) => {
 	}
 
 	const body = readFileSync(path);
+	// externalId ist Händler-Fremddatum -- für den Header auf ein harmloses Zeichen-Set reduzieren
+	// (ein `"` oder Zeilenumbruch darin würde den Header sonst brechen bzw. Node werfen lassen).
+	const safeName = `${storeId}-${receipt.externalId}`.replace(/[^A-Za-z0-9._-]/g, '_');
 	return new Response(body, {
 		headers: {
 			'Content-Type': 'application/pdf',
-			'Content-Disposition': `inline; filename="${storeId}-${receipt.externalId}.pdf"`
+			'Content-Disposition': `inline; filename="${safeName}.pdf"`,
+			'X-Content-Type-Options': 'nosniff'
 		}
 	});
 };

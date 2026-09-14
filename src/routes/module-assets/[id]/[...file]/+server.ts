@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { extname, join, normalize, sep } from 'node:path';
 import { error } from '@sveltejs/kit';
 import { modulesDir } from '$lib/server/modules/registry';
+import { isValidModuleId } from '$lib/server/modules/manifest';
 import type { RequestHandler } from './$types';
 
 /** Liefert eine Datei aus einem installierten Modul-Paket (${DATA_DIR}/modules/<id>/<file>) --
@@ -16,10 +17,8 @@ const ALLOWED_EXTENSIONS: Record<string, string> = {
 	'.webp': 'image/webp'
 };
 
-const ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,31}$/;
-
 export const GET: RequestHandler = async ({ params }) => {
-	if (!ID_PATTERN.test(params.id)) throw error(400, 'Ungültige Modul-Id');
+	if (!isValidModuleId(params.id)) throw error(400, 'Ungültige Modul-Id');
 
 	const contentType = ALLOWED_EXTENSIONS[extname(params.file).toLowerCase()];
 	if (!contentType) throw error(400, 'Dateityp nicht erlaubt');
@@ -33,7 +32,11 @@ export const GET: RequestHandler = async ({ params }) => {
 	return new Response(body, {
 		headers: {
 			'Content-Type': contentType,
-			'Cache-Control': 'private, max-age=3600'
+			'Cache-Control': 'private, max-age=3600',
+			// Die Datei stammt aus einem Fremdpaket: kein MIME-Sniffing, und ein direkt aufgerufenes
+			// SVG darf keine eingebetteten Skripte im App-Origin ausführen (sandbox + kein script-src).
+			'X-Content-Type-Options': 'nosniff',
+			'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox"
 		}
 	});
 };
