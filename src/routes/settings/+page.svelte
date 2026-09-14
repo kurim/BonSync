@@ -11,6 +11,7 @@
 	let savingMqtt = $state(false);
 	let testingMqtt = $state(false);
 	let changingPassword = $state(false);
+	let savingSync = $state(false);
 </script>
 
 <svelte:head><title>Einstellungen — BonSync</title></svelte:head>
@@ -23,12 +24,78 @@
 			</div>
 			<h1 class="font-headline-xl text-headline-xl tracking-tight text-on-surface">Einstellungen</h1>
 		</div>
-		<p class="font-body-md text-body-md text-on-surface-variant pl-space-md">Home Assistant / MQTT-Anbindung &amp; Konto</p>
+		<p class="font-body-md text-body-md text-on-surface-variant pl-space-md">Sync, Home Assistant / MQTT-Anbindung &amp; Konto</p>
 	</div>
 
 	<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter-desktop items-start">
-		<!-- MQTT Broker -->
+		<!-- Sync & Caching -->
 		<section class="col-span-6 2xl:col-span-7 flex flex-col gap-space-lg">
+			<div class="bg-surface-container-low rounded-xl p-space-lg shadow-xl relative overflow-hidden">
+				<div class="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+
+				<div class="flex items-center gap-space-sm mb-space-lg relative z-10">
+					<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+						<i class="fa-solid fa-arrows-rotate text-[18px]"></i>
+					</div>
+					<h2 class="font-headline-md text-headline-md text-on-surface">Sync &amp; Caching</h2>
+				</div>
+
+				<form
+					method="POST"
+					action="?/saveSync"
+					use:enhance={() => {
+						savingSync = true;
+						return async ({ update }) => {
+							savingSync = false;
+							await update({ reset: false });
+						};
+					}}
+					class="flex flex-col gap-space-lg relative z-10"
+				>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+						<div class="flex flex-col gap-space-xs">
+							<label class="font-label-mono-sm text-label-mono-sm text-on-surface font-medium" for="sync-interval">Sync-Intervall</label>
+							<div class="flex items-center gap-space-sm">
+								<input
+									id="sync-interval"
+									name="syncIntervalMinutes"
+									class="w-24 h-[38px] bg-surface-container-lowest text-on-surface font-label-mono-md text-label-mono-md px-space-md rounded-lg focus:outline-none focus:ring-1 focus:ring-primary transition-all text-center"
+									type="number"
+									min="0"
+									value={data.settings.syncIntervalMinutes}
+								/>
+								<span class="font-body-sm text-body-sm text-outline">Minuten automatisch abrufen (0 = nur manuell)</span>
+							</div>
+						</div>
+						<div class="flex flex-col gap-space-xs">
+							<label class="font-label-mono-sm text-label-mono-sm text-on-surface font-medium" for="eager-pdf-limit">Eager-PDF-Grenze</label>
+							<div class="flex items-center gap-space-sm">
+								<input
+									id="eager-pdf-limit"
+									name="eagerPdfLimit"
+									class="w-24 h-[38px] bg-surface-container-lowest text-on-surface font-label-mono-md text-label-mono-md px-space-md rounded-lg focus:outline-none focus:ring-1 focus:ring-primary transition-all text-center"
+									type="number"
+									value={data.settings.eagerPdfLimit}
+								/>
+								<span class="font-body-sm text-body-sm text-outline">Belege vorab im Cache puffern</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="flex items-center gap-space-md flex-wrap">
+						<button
+							class="flex items-center justify-center gap-space-xs px-space-xl h-[38px] rounded-lg bg-primary text-on-primary-container font-label-mono-md text-label-mono-md font-semibold hover:brightness-110 transition-all shadow-[0_0_16px_rgba(128,131,255,0.35)] disabled:opacity-60"
+							type="submit"
+							disabled={savingSync}
+						>
+							<i class="fa-solid fa-floppy-disk text-[18px]"></i>
+							{savingSync ? 'Speichere…' : 'Speichern'}
+						</button>
+						{#if form?.syncSaved}<span class="font-label-mono-xs text-label-mono-xs text-secondary">Änderungen gesichert ✓</span>{/if}
+					</div>
+				</form>
+			</div>
+
 			<div class="bg-surface-container-low rounded-xl p-space-lg shadow-xl relative overflow-hidden">
 				<div class="absolute -top-24 -right-24 w-60 h-60 bg-secondary-container/20 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -61,7 +128,7 @@
 							savingMqtt = false;
 							// reset:false -- sonst leert SvelteKits Standardverhalten nach jedem Submit
 							// (auch beim reinen Verbindungstest) alle Felder ohne festes HTML-value-
-							// Attribut (Base-Topic, Sync-Intervall, Eager-PDF-Grenze, Toggles).
+							// Attribut (Base-Topic, Toggles).
 							await update({ reset: false });
 						};
 					}}
@@ -177,36 +244,6 @@
 						<div class="switch shrink-0">
 							<input type="checkbox" id="pub-sum" name="mqttPublishSummary" checked={data.settings.mqttPublishSummary} />
 							<label for="pub-sum"></label>
-						</div>
-					</div>
-
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md pt-space-xs">
-						<div class="flex flex-col gap-space-xs">
-							<label class="font-label-mono-sm text-label-mono-sm text-on-surface font-medium" for="sync-interval">Sync-Intervall</label>
-							<div class="flex items-center gap-space-sm">
-								<input
-									id="sync-interval"
-									name="syncIntervalMinutes"
-									class="w-24 h-[38px] bg-surface-container-lowest text-on-surface font-label-mono-md text-label-mono-md px-space-md rounded-lg focus:outline-none focus:ring-1 focus:ring-primary transition-all text-center"
-									type="number"
-									min="0"
-									value={data.settings.syncIntervalMinutes}
-								/>
-								<span class="font-body-sm text-body-sm text-outline">Minuten automatisch abrufen (0 = nur manuell)</span>
-							</div>
-						</div>
-						<div class="flex flex-col gap-space-xs">
-							<label class="font-label-mono-sm text-label-mono-sm text-on-surface font-medium" for="eager-pdf-limit">Eager-PDF-Grenze</label>
-							<div class="flex items-center gap-space-sm">
-								<input
-									id="eager-pdf-limit"
-									name="eagerPdfLimit"
-									class="w-24 h-[38px] bg-surface-container-lowest text-on-surface font-label-mono-md text-label-mono-md px-space-md rounded-lg focus:outline-none focus:ring-1 focus:ring-primary transition-all text-center"
-									type="number"
-									value={data.settings.eagerPdfLimit}
-								/>
-								<span class="font-body-sm text-body-sm text-outline">Belege vorab im Cache puffern</span>
-							</div>
 						</div>
 					</div>
 

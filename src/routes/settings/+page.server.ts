@@ -54,9 +54,7 @@ export const actions: Actions = {
 			mqttTls: data.get('mqttTls') === 'on',
 			mqttBaseTopic: String(data.get('mqttBaseTopic') ?? 'bonsync/'),
 			mqttPublishNew: data.get('mqttPublishNew') === 'on',
-			mqttPublishSummary: data.get('mqttPublishSummary') === 'on',
-			eagerPdfLimit: Number(data.get('eagerPdfLimit') ?? 25),
-			syncIntervalMinutes: Math.max(0, Number(data.get('syncIntervalMinutes') ?? 60))
+			mqttPublishSummary: data.get('mqttPublishSummary') === 'on'
 		};
 		// Leeres Feld -> bestehendes Passwort unangetastet lassen (nie im Klartext ans Formular
 		// zurückgegeben, ein leeres Feld heißt hier "keine Änderung", nicht "löschen").
@@ -65,6 +63,19 @@ export const actions: Actions = {
 
 		await db.update(appSettings).set(set).where(eq(appSettings.id, 1)).run();
 		return { mqttSaved: true };
+	},
+
+	/** Sync-Intervall + Eager-PDF-Grenze betreffen den Sync-Scheduler generell, nicht nur MQTT --
+	 * eigene Action, damit sie unabhängig von den MQTT-Einstellungen gespeichert werden. */
+	saveSync: async ({ request }) => {
+		const data = await request.formData();
+		const set: Partial<typeof appSettings.$inferInsert> = {
+			eagerPdfLimit: Number(data.get('eagerPdfLimit') ?? 25),
+			syncIntervalMinutes: Math.max(0, Number(data.get('syncIntervalMinutes') ?? 60))
+		};
+
+		await db.update(appSettings).set(set).where(eq(appSettings.id, 1)).run();
+		return { syncSaved: true };
 	},
 
 	/** Testet die aktuell im Formular eingetragenen Werte (nicht erst nach dem Speichern) --
