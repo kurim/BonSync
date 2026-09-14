@@ -25,7 +25,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # QEMU + Buildx für Multi-Arch (amd64 für normale Server/NAS, arm64 für Raspberry Pi & Co.).
       - uses: docker/setup-qemu-action@v3
