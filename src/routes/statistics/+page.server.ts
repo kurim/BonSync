@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import { receipts, receiptItems } from '$lib/server/db/schema';
 import { getStoreUi } from '$lib/stores-ui';
-import { listMetas } from '$lib/server/modules/registry';
+import { listMetas, resolveUi } from '$lib/server/modules/registry';
 import type { StoreId } from '$lib/server/modules/types';
 import type { PageServerLoad } from './$types';
 
@@ -81,7 +81,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	}
 	const storeBreakdown = STORE_ORDER.map((id) => {
 		const entry = byStore.get(id)!;
-		const ui = getStoreUi(id);
+		const ui = getStoreUi(id, undefined, resolveUi(id));
 		return {
 			id,
 			name: ui.name,

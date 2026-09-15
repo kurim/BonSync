@@ -1,6 +1,8 @@
 import { db } from '$lib/server/db';
 import { receipts } from '$lib/server/db/schema';
 import { geocodeAddress, mapTileUrlTemplate } from '$lib/server/geocoding';
+import { getStoreUi } from '$lib/stores-ui';
+import { listMetas, resolveUi } from '$lib/server/modules/registry';
 import type { StoreId } from '$lib/server/modules/types';
 import type { PageServerLoad } from './$types';
 
@@ -41,5 +43,9 @@ export const load: PageServerLoad = async () => {
 		})
 	);
 
-	return { filialen, mapTileUrl: mapTileUrlTemplate() };
+	// UI-Werte aus der Registry, als serialisierbare Map an den Client durchgereicht (die
+	// Registry selbst ist nur server-seitig verfügbar, siehe stores-ui.ts#getStoreUi).
+	const storeUi = Object.fromEntries(listMetas().map((m) => [m.id, getStoreUi(m.id, m.displayName, resolveUi(m.id))]));
+
+	return { filialen, mapTileUrl: mapTileUrlTemplate(), storeUi };
 };

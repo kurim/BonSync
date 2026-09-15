@@ -2,7 +2,7 @@ import { desc, inArray, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { receipts, receiptItems, storeModules, appSettings } from '$lib/server/db/schema';
 import { getStoreUi } from '$lib/stores-ui';
-import { listMetas } from '$lib/server/modules/registry';
+import { listMetas, resolveUi } from '$lib/server/modules/registry';
 import type { PageServerLoad } from './$types';
 
 const RANGES = ['month', '30days', 'year'] as const;
@@ -29,6 +29,11 @@ export const load: PageServerLoad = async ({ url }) => {
 	// Pro Request neu ermittelt (statt statischem Array), damit ein frisch installiertes/
 	// deinstalliertes Modul ohne Serverneustart berücksichtigt wird.
 	const STORE_ORDER = listMetas().map((m) => m.id);
+
+	// UI-Werte (Name/Farbe/Kürzel/Logo) aus der Registry, direkt aus dem jeweiligen Manifest --
+	// als serialisierbare Map an den Client durchgereicht, da die Registry selbst nur
+	// server-seitig verfügbar ist (siehe stores-ui.ts#getStoreUi).
+	const storeUi = Object.fromEntries(listMetas().map((m) => [m.id, getStoreUi(m.id, m.displayName, resolveUi(m.id))]));
 
 	const rangeParam = url.searchParams.get('range');
 	const range: Range = (RANGES as readonly string[]).includes(rangeParam ?? '') ? (rangeParam as Range) : 'month';
@@ -60,7 +65,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		const [id, cents] = [...byStore.entries()].sort((a, b) => b[1] - a[1])[0];
 		const pct = totalCents > 0 ? Math.round((cents / totalCents) * 100) : 0;
 		const count = inRange.filter((r) => r.storeId === id).length;
-		const ui = getStoreUi(id);
+		const ui = storeUi[id] ?? getStoreUi(id);
 		topStore = { id, name: ui.name, color: ui.color, cents, pct, count };
 	}
 
@@ -106,12 +111,12 @@ export const load: PageServerLoad = async ({ url }) => {
 	const modules = await db.select().from(storeModules).all();
 	const enabledModules = modules.filter((m) => m.enabled);
 	const connectedCount = enabledModules.filter((m) => m.status === 'connected').length;
-	const offlineModules = enabledModules.filter((m) => m.status !== 'connected').map((m) => getStoreUi(m.id).name);
+	const offlineModules = enabledModules.filter((m) => m.status !== 'connected').map((m) => (storeUi[m.id] ?? getStoreUi(m.id)).name);
 	const lastSyncAt = modules.reduce<number | null>(
 		(latest, m) => (m.lastSyncAt && (!latest || m.lastSyncAt > latest) ? m.lastSyncAt : latest),
 		null
 	);
-	const activeStoreNames = enabledModules.filter((m) => m.status === 'connected').map((m) => getStoreUi(m.id).name);
+	const activeStoreNames = enabledModules.filter((m) => m.status === 'connected').map((m) => (storeUi[m.id] ?? getStoreUi(m.id)).name);
 
 	const settings = await db.select().from(appSettings).where(eq(appSettings.id, 1)).get();
 	const pollingEnabled = (settings?.syncIntervalMinutes ?? 0) > 0;
@@ -134,6 +139,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		recentPerStore,
 		syncStatus: { enabledCount: enabledModules.length, connectedCount, lastSyncAt, offlineModules },
 		pollingEnabled,
-		activeStoreNames
+		activeStoreNames,
+		storeUi
 	};
 };

@@ -4,6 +4,13 @@
 
 	let { data } = $props();
 
+	// UI-Werte kommen server-seitig aus der Modul-Registry (data.storeUi, siehe +page.server.ts);
+	// Fallback nur für Belege eines mittlerweile deinstallierten Moduls, das in `data.storeUi`
+	// (nur aktuell installierte Module) nicht mehr auftaucht.
+	function storeUi(id: string) {
+		return data.storeUi[id] ?? getStoreUi(id);
+	}
+
 	// svelte-ignore state_referenced_locally -- bewusst nur als initialer Wert für das editierbare Feld
 	let searchValue = $state(data.search);
 	let searchInputEl: HTMLInputElement;
@@ -33,16 +40,6 @@
 			searchInputEl?.focus();
 		}
 	}
-
-	// Badge-Farben für die Ledger-Tabelle (1:1 aus _redesign/Kassenzettel/code.html) — eigene
-	// Zuordnung statt STORE_UI's CSS-Variablen, da die Tailwind-Utilities (bg-red-950/40 etc.)
-	// literale Klassennamen brauchen, keine Farbwerte.
-	const PILL_CLASSES: Record<string, { badge: string; dot: string; pillDot: string }> = {
-		rewe: { badge: 'bg-red-950/40 text-red-300', dot: 'bg-red-500', pillDot: 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.7)]' },
-		penny: { badge: 'bg-purple-950/40 text-purple-300', dot: 'bg-purple-400', pillDot: 'bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.7)]' },
-		lidl: { badge: 'bg-sky-950/40 text-sky-300', dot: 'bg-sky-400', pillDot: 'bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.7)]' },
-		rossmann: { badge: 'bg-amber-950/40 text-amber-300', dot: 'bg-amber-500', pillDot: 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.7)]' }
-	};
 
 	const rangeStart = $derived((data.page - 1) * data.pageSize + 1);
 	const rangeEnd = $derived(Math.min(data.page * data.pageSize, data.total));
@@ -109,8 +106,7 @@
 				Alle
 			</button>
 			{#each data.availableStores as id (id)}
-				{@const meta = getStoreUi(id)}
-				{@const pill = PILL_CLASSES[id]}
+				{@const meta = storeUi(id)}
 				<button
 					class={[
 						'flex items-center gap-2 px-4 py-1.5 rounded-full font-label-mono-sm text-label-mono-sm transition-all whitespace-nowrap cursor-pointer',
@@ -119,7 +115,7 @@
 					type="button"
 					onclick={() => updateQuery({ store: id })}
 				>
-					<span class="w-2 h-2 rounded-full {pill?.pillDot ?? ''}" style={pill ? '' : `background:${meta.color}`}></span>
+					<span class="w-2 h-2 rounded-full" style="background:{meta.color}; box-shadow:0 0 6px color-mix(in srgb, {meta.color} 70%, transparent);"></span>
 					{meta.name}
 				</button>
 			{/each}
@@ -142,12 +138,14 @@
 				</thead>
 				<tbody class="divide-y divide-surface-container/30 text-on-surface font-body-md text-body-md">
 					{#each data.receipts as r (r.id)}
-						{@const meta = getStoreUi(r.storeId)}
-						{@const pill = PILL_CLASSES[r.storeId]}
+						{@const meta = storeUi(r.storeId)}
 						<tr class="group hover:bg-surface-container/60 transition-colors cursor-pointer" onclick={() => goto(`/receipts/${r.id}`)}>
 							<td class="py-3.5 px-space-lg whitespace-nowrap">
-								<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-mono-sm text-label-mono-sm font-semibold tracking-wide {pill?.badge ?? ''}">
-									<span class="w-2 h-2 rounded-full {pill?.dot ?? ''}" style={pill ? '' : `background:${meta.color}`}></span>
+								<span
+									class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-mono-sm text-label-mono-sm font-semibold tracking-wide"
+									style="background:color-mix(in srgb, {meta.color} 16%, transparent); color:{meta.color};"
+								>
+									<span class="w-2 h-2 rounded-full" style="background:{meta.color}"></span>
 									{meta.name}
 								</span>
 							</td>
