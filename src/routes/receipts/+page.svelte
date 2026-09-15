@@ -110,12 +110,15 @@
 				<button
 					class={[
 						'flex items-center gap-2 px-4 py-1.5 rounded-full font-label-mono-sm text-label-mono-sm transition-all whitespace-nowrap cursor-pointer',
-						data.storeFilter === id ? 'bg-on-surface text-surface shadow-md font-semibold' : 'bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface font-medium'
+						data.storeFilter === id ? 'bg-on-surface text-surface shadow-md font-semibold' : 'font-medium'
 					]}
+					style={data.storeFilter === id
+						? ''
+						: `background:color-mix(in srgb, ${meta.color} 16%, transparent); color:${meta.color}; border:1px solid color-mix(in srgb, ${meta.color} 35%, transparent);`}
 					type="button"
 					onclick={() => updateQuery({ store: id })}
 				>
-					<span class="w-2 h-2 rounded-full" style="background:{meta.color}; box-shadow:0 0 6px color-mix(in srgb, {meta.color} 70%, transparent);"></span>
+					<span class="w-2 h-2 rounded-full" style="background:{meta.color}"></span>
 					{meta.name}
 				</button>
 			{/each}
@@ -142,11 +145,10 @@
 						<tr class="group hover:bg-surface-container/60 transition-colors cursor-pointer" onclick={() => goto(`/receipts/${r.id}`)}>
 							<td class="py-3.5 px-space-lg whitespace-nowrap">
 								<span
-									class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-mono-sm text-label-mono-sm font-semibold tracking-wide"
-									style="background:color-mix(in srgb, {meta.color} 16%, transparent); color:{meta.color};"
+									class="inline-flex flex-shrink-0 items-center justify-center gap-1.5 py-1 px-2 rounded-md text-[10px] font-extrabold uppercase tracking-wider text-center"
+									style="background:color-mix(in srgb, {meta.color} 16%, transparent); color:{meta.color}; border:1px solid color-mix(in srgb, {meta.color} 35%, transparent);"
 								>
-									<span class="w-2 h-2 rounded-full" style="background:{meta.color}"></span>
-									{meta.name}
+									<span class="w-1.5 h-1.5 rounded-full" style="background:{meta.color}"></span>{meta.name}
 								</span>
 							</td>
 							<td class="py-3.5 px-space-md whitespace-nowrap text-right font-label-mono-sm text-label-mono-sm text-on-surface-variant">
