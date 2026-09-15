@@ -4,6 +4,13 @@
 
 	let { data } = $props();
 
+	// UI-Werte kommen server-seitig aus der Modul-Registry (data.storeUi, siehe +page.server.ts);
+	// Fallback nur für Belege eines mittlerweile deinstallierten Moduls, das in `data.storeUi`
+	// (nur aktuell installierte Module) nicht mehr auftaucht.
+	function storeUi(id: string) {
+		return data.storeUi[id] ?? getStoreUi(id);
+	}
+
 	let searchValue = $state('');
 	const filteredFilialen = $derived(
 		searchValue.trim()
@@ -31,7 +38,7 @@
 		if (withCoords.length > 0) {
 			const bounds = L.latLngBounds(withCoords.map((f) => [f.lat as number, f.lon as number]));
 			for (const f of withCoords) {
-				const color = getStoreUi(f.storeId).color;
+				const color = storeUi(f.storeId).color;
 				L.circleMarker([f.lat as number, f.lon as number], {
 					radius: 9,
 					color,
@@ -110,7 +117,7 @@
 				{#if filteredFilialen.length > 0}
 					<div class="flex flex-col divide-y divide-surface-container-high/60">
 						{#each filteredFilialen as f, i (f.address + f.storeId)}
-							{@const ui = getStoreUi(f.storeId)}
+							{@const ui = storeUi(f.storeId)}
 							<div class="flex items-center gap-space-sm py-2">
 								<span class="w-2 h-2 rounded-full shrink-0" style="background:{ui.color}"></span>
 								<div class="min-w-0 flex-1">

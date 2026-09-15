@@ -1,6 +1,7 @@
-/** War früher eine feste Union der 4 eingebauten Module — seit dem dynamischen Modul-System
+/** War früher eine feste Union fest eingebauter Module — seit dem dynamischen Modul-System
  * (siehe registry.ts) ist jede über ein Manifest installierte `id` gültig, daher ein reiner
- * String. Die 4 eingebauten Module verwenden weiterhin exakt 'rewe'/'penny'/'lidl'/'rossmann'. */
+ * String. Es gibt keine fest installierten Module mehr, auch 'rewe'/'penny'/'lidl'/'rossmann'
+ * sind ganz normal per Zip installierte Pakete wie jedes andere. */
 export type StoreId = string;
 
 export interface ReceiptSummary {

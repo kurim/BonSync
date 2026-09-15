@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { appSettings, receipts } from './db/schema';
 import { decryptJson } from './crypto';
-import { getStoreUi } from '../stores-ui';
+import { getMeta } from './modules/registry';
 import type { ReceiptSummary, StoreId } from './modules/types';
 
 interface MqttConfig {
@@ -100,7 +100,7 @@ function startOfMonth(): number {
  * `retain:true` neu veröffentlicht, damit HA den Sensor auch nach einem Neustart des Brokers
  * ohne weiteres Zutun wieder anlegt. */
 function summaryDiscoveryPayload(storeId: StoreId, objectId: string, stateTopic: string): string {
-	const storeName = getStoreUi(storeId).name;
+	const storeName = getMeta(storeId)?.displayName ?? storeId.toUpperCase();
 	return JSON.stringify({
 		name: `BonSync ${storeName} Ausgaben diesen Monat`,
 		unique_id: objectId,

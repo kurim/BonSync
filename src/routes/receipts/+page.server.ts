@@ -1,6 +1,8 @@
 import { desc, count } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { receipts, receiptItems } from '$lib/server/db/schema';
+import { getStoreUi } from '$lib/stores-ui';
+import { listMetas, resolveUi } from '$lib/server/modules/registry';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SIZE = 25;
@@ -44,6 +46,12 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	const receiptsWithCounts = pageRows.map((r) => ({ ...r, itemCount: itemCounts.get(r.id) ?? 0 }));
 
+	// UI-Werte aus der Registry, als serialisierbare Map an den Client durchgereicht (die
+	// Registry selbst ist nur server-seitig verfügbar, siehe stores-ui.ts#getStoreUi). Über alle
+	// installierten Module statt nur availableStores, damit ein Wechsel des Filters ohne
+	// erneuten Serverroundtrip die richtige Farbe zeigt.
+	const storeUi = Object.fromEntries(listMetas().map((m) => [m.id, getStoreUi(m.id, m.displayName, resolveUi(m.id))]));
+
 	const monthCents = allRows
 		.filter((r) => r.timestamp >= monthStart() && !r.cancelled)
 		.reduce((sum, r) => sum + r.totalCents, 0);
@@ -57,6 +65,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		pageCount,
 		pageSize: PAGE_SIZE,
 		availableStores,
-		monthCents
+		monthCents,
+		storeUi
 	};
 };

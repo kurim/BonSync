@@ -159,15 +159,17 @@ export function getLoaded(id: string): LoadedModule | undefined {
 	return registry.get(id);
 }
 
-/** Manifest-getriebene UI-Werte (Farbe/Kürzel/Logo) für ein installiertes Modul, mit dem
- * Logo-relativpfad zur passenden /module-assets-Route aufgelöst -- `null`, falls das Modul kein
- * `ui`-Feld im Manifest hat (dann greift stores-ui.ts's generischer Fallback). Zentral hier
- * statt in jeder Seite dupliziert, damit jede Seite, die ein Modul-Logo anzeigt (dealer-
- * interfaces, receipts/[id]), dieselbe Auflösung nutzt. */
-export function resolveUi(id: string): { color?: string; chip?: string; logo?: string } | null {
-	const ui = getLoaded(id)?.ui;
-	if (!ui) return null;
-	return { color: ui.color, chip: ui.chip, logo: ui.logo ? `/module-assets/${id}/${ui.logo}` : undefined };
+/** Anzeigename + manifest-getriebene UI-Werte (Farbe/Kürzel/Logo) für ein installiertes Modul,
+ * mit dem Logo-relativpfad zur passenden /module-assets-Route aufgelöst -- `null`, falls das
+ * Modul gar nicht (mehr) geladen ist (dann greift stores-ui.ts's generischer Fallback). Zentral
+ * hier statt in jeder Seite dupliziert, damit jede Seite, die ein Modul-Logo/-Badge anzeigt
+ * (dealer-interfaces, receipts, receipts/[id], dashboard, filialen, statistics), dieselbe
+ * Auflösung nutzt. */
+export function resolveUi(id: string): { name?: string; color?: string; chip?: string; logo?: string } | null {
+	const loaded = getLoaded(id);
+	if (!loaded) return null;
+	const ui = loaded.ui;
+	return { name: loaded.meta.displayName, color: ui?.color, chip: ui?.chip, logo: ui?.logo ? `/module-assets/${id}/${ui.logo}` : undefined };
 }
 
 export function unregisterModule(id: string): void {

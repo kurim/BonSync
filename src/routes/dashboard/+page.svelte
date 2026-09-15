@@ -5,6 +5,13 @@
 
 	let { data } = $props();
 
+	// UI-Werte kommen server-seitig aus der Modul-Registry (data.storeUi, siehe +page.server.ts);
+	// Fallback nur für Belege eines mittlerweile deinstallierten Moduls, das in `data.storeUi`
+	// (nur aktuell installierte Module) nicht mehr auftaucht.
+	function storeUi(id: string) {
+		return data.storeUi[id] ?? getStoreUi(id);
+	}
+
 	const RANGE_LABELS: Record<Range, string> = {
 		month: 'Dieser Monat',
 		'30days': 'Letzte 30 Tage',
@@ -214,10 +221,10 @@
 								{@const yOffset = entries.slice(0, si).reduce((acc, [, c]) => acc + (c / 100) * scale, 0)}
 								<rect
 									x={x} y={chartBottom - yOffset - h} width={barWidth} height={h}
-									fill={getStoreUi(storeId).color}
-									role="img" aria-label="{getStoreUi(storeId).name} {month.label}: {euro(cents)}"
-									onmouseenter={(e) => showTooltip(e, `${getStoreUi(storeId).name} · ${month.label}: ${euro(cents)}`)}
-									onmousemove={(e) => showTooltip(e, `${getStoreUi(storeId).name} · ${month.label}: ${euro(cents)}`)}
+									fill={storeUi(storeId).color}
+									role="img" aria-label="{storeUi(storeId).name} {month.label}: {euro(cents)}"
+									onmouseenter={(e) => showTooltip(e, `${storeUi(storeId).name} · ${month.label}: ${euro(cents)}`)}
+									onmousemove={(e) => showTooltip(e, `${storeUi(storeId).name} · ${month.label}: ${euro(cents)}`)}
 									onmouseleave={hideTooltip}
 								/>
 							{/each}
@@ -232,7 +239,7 @@
 			<div class="pt-space-md mt-space-md border-t border-surface-container-highest flex flex-wrap items-center justify-between gap-space-sm">
 				<div class="flex items-center flex-wrap gap-space-md font-label-mono-xs text-label-mono-xs">
 					{#each chartStoreIds as id (id)}
-						{@const meta = getStoreUi(id)}
+						{@const meta = storeUi(id)}
 						<div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background:{meta.color}"></span><span class="text-on-surface">{meta.name}</span></div>
 					{/each}
 				</div>
@@ -260,7 +267,7 @@
 				{:else}
 					<div class="flex flex-col gap-space-xs mt-space-sm">
 						{#each visibleReceipts as r (r.id)}
-							{@const ui = getStoreUi(r.storeId)}
+							{@const ui = storeUi(r.storeId)}
 							<button
 								type="button"
 								onclick={() => openDrawer(r)}
@@ -328,7 +335,7 @@
 <div class="drawer-backdrop" class:open={!!selectedReceipt} onclick={closeDrawer} role="presentation"></div>
 <aside class="drawer" class:open={!!selectedReceipt}>
 	{#if selectedReceipt}
-		{@const ui = getStoreUi(selectedReceipt.storeId)}
+		{@const ui = storeUi(selectedReceipt.storeId)}
 		<div class="drawer-head">
 			<div>
 				<span class="store-badge" style="background:color-mix(in srgb, {ui.color} 16%, transparent); color:{ui.color}; margin-bottom:8px;">
