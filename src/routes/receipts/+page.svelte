@@ -131,39 +131,39 @@
 			<table class="w-full text-left border-collapse">
 				<thead>
 					<tr class="bg-surface-container-lowest/60 text-outline uppercase font-label-mono-xs text-label-mono-xs tracking-wider">
-						<th class="py-space-md px-space-lg font-medium" scope="col">Markt</th>
-						<th class="py-space-md px-space-md font-medium text-right" scope="col">Datum</th>
-						<th class="py-space-md px-space-md font-medium" scope="col">Filiale / Ort</th>
-						<th class="py-space-md px-space-md font-medium text-center" scope="col">Artikel</th>
-						<th class="py-space-md px-space-md font-medium text-right" scope="col">Betrag</th>
-						<th class="py-space-md px-space-lg font-medium text-right" scope="col">Aktionen</th>
+						<th class="font-medium" scope="col">Markt</th>
+						<th class="w-48 font-medium text-center" scope="col">Datum</th>
+						<th class="font-medium" scope="col">Filiale / Ort</th>
+						<th class="font-medium text-center" scope="col">Artikel</th>
+						<th class="font-medium text-center" scope="col">Betrag</th>
+						<th class="w-24 font-medium text-right" scope="col">Aktionen</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-surface-container/30 text-on-surface font-body-md text-body-md">
 					{#each data.receipts as r (r.id)}
 						{@const meta = storeUi(r.storeId)}
 						<tr class="group hover:bg-surface-container/60 transition-colors cursor-pointer" onclick={() => goto(`/receipts/${r.id}`)}>
-							<td class="py-2.5 px-space-lg whitespace-nowrap">
+							<td class="whitespace-nowrap">
 								<span
-									class="inline-flex flex-shrink-0 items-center justify-center gap-1.5 py-1 px-2 rounded-md text-[10px] font-extrabold uppercase tracking-wider text-center"
+									class="flex flex-shrink-0 items-center justify-center gap-1.5 py-1 px-2 rounded-md text-[10px] font-extrabold uppercase tracking-wider text-center"
 									style="background:color-mix(in srgb, {meta.color} 16%, transparent); color:{meta.color}; border:1px solid color-mix(in srgb, {meta.color} 35%, transparent);"
 								>
 									<span class="w-1.5 h-1.5 rounded-full" style="background:{meta.color}"></span>{meta.name}
 								</span>
 							</td>
-							<td class="py-2.5 px-space-md whitespace-nowrap text-right font-label-mono-sm text-label-mono-sm text-on-surface-variant">
+							<td class="whitespace-nowrap text-center font-label-mono-sm text-label-mono-sm text-on-surface-variant">
 								{new Date(r.timestamp).toLocaleDateString('de-DE')} <span class="text-outline mx-1">·</span> {new Date(r.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
 							</td>
-							<td class="py-2.5 px-space-md whitespace-nowrap font-body-md text-body-md text-on-surface">
+							<td class="whitespace-nowrap font-body-md text-body-md text-on-surface">
 								{r.marketName ?? '—'}{r.marketCity ? `, ${r.marketCity}` : ''}
 							</td>
-							<td class="py-2.5 px-space-md whitespace-nowrap text-center font-label-mono-sm text-label-mono-sm font-semibold text-on-surface">
+							<td class="whitespace-nowrap text-center font-label-mono-sm text-label-mono-sm font-semibold text-on-surface">
 								{r.itemCount > 0 ? r.itemCount : '—'}
 							</td>
-							<td class="py-2.5 px-space-md whitespace-nowrap text-right font-label-mono-md text-label-mono-md font-bold text-on-surface">
+							<td class="whitespace-nowrap text-center font-label-mono-md text-label-mono-md font-bold text-on-surface">
 								{euro(r.totalCents)}
 							</td>
-							<td class="py-2.5 px-space-lg whitespace-nowrap text-right">
+							<td class="whitespace-nowrap text-right">
 								{#if r.pdfFetched}
 									<a
 										class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container text-on-surface-variant group-hover:text-primary group-hover:bg-primary/10 transition-colors"
