@@ -145,7 +145,7 @@
 						<tr class="group hover:bg-surface-container/60 transition-colors cursor-pointer" onclick={() => goto(`/receipts/${r.id}`)}>
 							<td class="whitespace-nowrap">
 								<span
-									class="flex flex-shrink-0 items-center justify-center gap-1.5 py-1 px-2 rounded-md text-[10px] font-extrabold uppercase tracking-wider text-center"
+									class="inline-flex flex-shrink-0 items-center justify-center gap-1.5 py-1 px-2 rounded-md text-[10px] leading-none font-extrabold uppercase tracking-wider text-center"
 									style="background:color-mix(in srgb, {meta.color} 16%, transparent); color:{meta.color}; border:1px solid color-mix(in srgb, {meta.color} 35%, transparent);"
 								>
 									<span class="w-1.5 h-1.5 rounded-full" style="background:{meta.color}"></span>{meta.name}
