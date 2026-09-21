@@ -69,7 +69,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build (und Push, außer bei PRs)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           # PRs: nur amd64 bauen (schneller, nur Smoke-Test). Main/Tags: beide Architekturen.
