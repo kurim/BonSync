@@ -121,25 +121,29 @@ a{ color:inherit; text-decoration:none; }
   .bottom-nav{ display:flex; }
 }
 
-/* iOS 27 zeichnet in installierten Web-Apps einen farbigen Trennstrich bzw. Schatten unter die
-   Statusleiste (Beta, auch ohne eigenen Rahmen im Inhalt). Gegenmittel: In der installierten App
-   ist die Kopfzeile deckend (kein Blur, durch den scrollender Inhalt schimmert), und ein fester
-   Streifen in Kopfzeilenfarbe deckt die Statusleisten-Zone samt 2px Überlappung ab. Er sitzt über
-   dem Inhalt, fängt aber keine Eingaben ab. Nur Handy hochkant: quer ist der Inset 0, und die
-   iPad-Sidebar hat oben keine einheitliche Farbe. Im normalen Browser (kein standalone) ändert
-   sich nichts. Auf einem echten iOS-27-Gerät prüfen. */
-@media (display-mode: standalone) and (max-width: 767px){
-  .mobile-header{
-    background:var(--surface);
-    backdrop-filter:none;
-  }
-  .mobile-header::before{
-    content:"";
-    position:fixed; top:0; left:0; right:0;
-    height:calc(env(safe-area-inset-top) + 2px);
-    background:var(--surface);
-    pointer-events:none;
-    z-index:1;
+/* iOS 27 (Beta) verwischt in installierten Web-Apps die obersten ~16px unter der Statusleiste.
+   Gegenmittel (wie in sunshare-bridge, dort geprüft): Die Statusleiste ist deckend ("default",
+   siehe app.html), ein fester Streifen in Kopfzeilenfarbe reserviert diese 16px, und die Kopfzeile
+   rückt um genauso viel nach unten. Nur Handy hochkant: quer gibt es keinen solchen Rand, und die
+   iPad-Sidebar hat oben keine einheitliche Farbe. @supports (-webkit-touch-callout) trifft nur
+   iOS/WebKit -- Android und Desktop-Browser behalten ihr Layout. Rein per CSS, weil die CSP keine
+   Inline-Skripte erlaubt. */
+:root{ --status-tint-h:16px; }
+@media (display-mode: standalone) and (orientation: portrait) and (max-width: 767px){
+  @supports (-webkit-touch-callout: none){
+    .mobile-header{
+      padding-top:calc(10px + env(safe-area-inset-top) + var(--status-tint-h));
+      background:var(--surface);
+      backdrop-filter:none;
+    }
+    .mobile-header::before{
+      content:"";
+      position:fixed; top:0; left:0; right:0;
+      height:calc(env(safe-area-inset-top) + var(--status-tint-h));
+      background:var(--surface);
+      pointer-events:none;
+      z-index:1;
+    }
   }
 }
 
