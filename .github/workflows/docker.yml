@@ -112,3 +112,30 @@ jobs:
           delete-untagged: true
           exclude-tags: latest,stable
           validate: true
+
+  # Ein gepushter vX.Y.Z-Tag bekommt zusätzlich ein GitHub-Release, dessen Text der passende
+  # Abschnitt aus CHANGELOG.md ist (bricht ab, wenn es keinen gibt -- ein Release geht also nie
+  # ohne Notes raus). Wurde das Release für den Tag schon in der GitHub-UI angelegt, wird nur
+  # sein Text ersetzt.
+  release:
+    needs: [build]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Release-Text aus dem Changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="${VERSION}" 'index($0, "## [" v "]") == 1 {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "Kein Abschnitt für ${VERSION} in CHANGELOG.md"; exit 1; }
+      - name: GitHub-Release anlegen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --notes-file notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes-file notes.md
+          fi

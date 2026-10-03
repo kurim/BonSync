@@ -35,11 +35,14 @@ starten (`docker compose up --build -d`), die CI baut das Image bei PRs nur für
 ## Ablauf für Änderungen
 
 1. Fork bzw. Feature-Branch von `main` anlegen (z.B. `feature/kurze-beschreibung`).
-2. Kleine, fokussierte Commits mit aussagekräftiger Nachricht. Warum eine Änderung nötig ist,
+2. Nutzerrelevante Änderungen in [`CHANGELOG.md`](CHANGELOG.md) unter `## [Unreleased]` eintragen
+   ([Keep a Changelog](https://keepachangelog.com/de/1.1.0/)). Beim Taggen von `vX.Y.Z` wird der
+   gleichnamige Abschnitt automatisch zum Text des GitHub-Releases.
+3. Kleine, fokussierte Commits mit aussagekräftiger Nachricht. Warum eine Änderung nötig ist,
    gehört in die Commit-Nachricht oder in einen Kommentar im Code — nicht nur ins PR.
-3. Pull Request gegen `main` öffnen. Im PR kurz beschreiben: Was ändert sich, warum, und wie
+4. Pull Request gegen `main` öffnen. Im PR kurz beschreiben: Was ändert sich, warum, und wie
    wurde es getestet.
-4. Der Repo-Owner (siehe [`.github/CODEOWNERS`](.github/CODEOWNERS)) reviewt und merged.
+5. Der Repo-Owner (siehe [`.github/CODEOWNERS`](.github/CODEOWNERS)) reviewt und merged.
    Direkte Pushes auf `main` sind nicht vorgesehen.
 
 Größere Umbauten (neue Abhängigkeiten, Datenbank-Schema, Modul-SDK-Vertrag) bitte vorher als
