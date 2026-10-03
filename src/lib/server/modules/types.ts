@@ -50,6 +50,12 @@ export interface ReceiptMeta {
 	tseStart?: string;
 	tseStop?: string;
 	loyaltyNote?: string;
+	/** Mit diesem Einkauf gesammeltes Bonus-Guthaben (REWE: "Mit diesem Einkauf hast du 1,15 EUR
+	 * REWE Bonus-Guthaben gesammelt") -- im Gegensatz zu loyaltyNote, das nur den Ist-Stand zeigt. */
+	loyaltyEarnedCents?: number;
+	/** Aufschlüsselung des gesammelten Bonus, z.B. { label: "Bonus-Aktion(en)", amountCents: 40 } oder
+	 * { group: "Bonus-Coupon(s)", label: "10% auf REWE Beste W", amountCents: 75 }. */
+	loyaltyEarnedBreakdown?: { group?: string; label: string; amountCents: number }[];
 }
 
 /** Store-spezifischer, aber einheitlich verschlüsselt abgelegter Credential-Blob. */

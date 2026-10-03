@@ -296,7 +296,25 @@
 				</div>
 			</div>
 
-			{#if meta?.loyaltyNote}
+			{#if meta?.loyaltyEarnedCents != null}
+				<div class="rounded-xl bg-surface-container p-space-md shadow-md flex flex-col gap-space-sm">
+					<div class="flex items-center gap-space-sm">
+						<div class="p-2 rounded-lg bg-primary/20 text-primary shrink-0">
+							<i class="fa-solid fa-tags text-[18px]"></i>
+						</div>
+						<span class="font-body-md text-body-md font-bold text-primary">Mit diesem Einkauf {euro(meta.loyaltyEarnedCents)} Bonus gesammelt</span>
+					</div>
+					{#each meta.loyaltyEarnedBreakdown ?? [] as entry, i (i)}
+						<div class="flex justify-between gap-space-sm text-body-sm text-on-surface-variant">
+							<span>{entry.group ? `${entry.group}: ${entry.label}` : entry.label}</span>
+							<span class="font-label-mono-sm text-label-mono-sm text-on-surface shrink-0">{euro(entry.amountCents)}</span>
+						</div>
+					{/each}
+					{#if meta.loyaltyNote}
+						<div class="pt-space-xs border-t border-surface-container-high font-body-md text-body-md text-on-surface">{meta.loyaltyNote}</div>
+					{/if}
+				</div>
+			{:else if meta?.loyaltyNote}
 				<div class="rounded-xl bg-surface-container p-space-md shadow-md flex items-center gap-space-sm">
 					<div class="p-2 rounded-lg bg-primary/20 text-primary shrink-0">
 						<i class="fa-solid fa-tags text-[18px]"></i>

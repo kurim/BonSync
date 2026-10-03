@@ -73,6 +73,9 @@ export async function extractPdfText(pdf: Buffer): Promise<string[]> {
 // REWE: "UID Nr.: DE307900053 EUR", "Geg. VISA EUR 15,54", "B= 7,0% 14,52 1,02 15,54",
 //   "TSE-Signaturzähler: 758669", "TSE-Transaktion: 371041", "TSE-Start/-Stop: <ISO>",
 //   "Markt:1017 Kasse:2 Bed.:272727", "... Bon-Nr.:309", "Aktuelles Bonus-Guthaben: 7,18 EUR".
+//   Davor ggf. der Block "Deine REWE Bonus-Vorteile heute": "Mit diesem Einkauf hast du 1,15 EUR",
+//   "REWE Bonus-Guthaben gesammelt:", "Bonus-Aktion(en) 0,40 EUR", "Bonus-Coupon(s)",
+//   "10% auf REWE Beste W 0,75 EUR".
 // PENNY: identisches Format zu REWE (gleiches POS-System) plus "Sie erhalten 5 Treuepunkt(e)".
 // ROSSMANN: "UmSt-ID. DE 115 055 186", "Bezahlung VISA" + "Betrag 35,68 EUR", "A 19%: 29,98
 //   5,70 35,68" (Steuerzeile ohne "="/Komma-Prozent), "Signaturzähler:"/"Start:"/"Ende:" ohne
@@ -97,14 +100,48 @@ const MARKT_KASSE_BED = /^Markt:(\S+)\s+Kasse:(\S+)\s+Bed\.?:(\S+)/i;
 const BON_NR = /Bon-Nr\.?:(\d+)/i;
 const LOYALTY_BALANCE = new RegExp(`Aktuelles\\s+Bonus-Guthaben:\\s*${PRICE}\\s*EUR`, 'i');
 const LOYALTY_POINTS = /Sie\s+erhalten\s+\d+\s+Treuepunkt/i;
+const LOYALTY_EARNED = new RegExp(`^Mit\\s+diesem\\s+Einkauf\\s+hast\\s+du\\s+(${PRICE})\\s*EUR`, 'i');
+const LOYALTY_EARNED_CONTINUATION = /Bonus-Guthaben\s+gesammelt:?$/i;
+const LOYALTY_EARNED_ENTRY = new RegExp(`^(.+?)\\s+(${PRICE})\\s*EUR$`, 'i');
+const LOYALTY_EARNED_GROUP = /^Bonus-\S+$/i;
 
 export function parseReceiptMeta(lines: string[]): ReceiptMeta {
 	const meta: ReceiptMeta = { taxBreakdown: [] };
 	let pendingPaymentLabel: string | undefined;
+	// Innerhalb des Blocks "Mit diesem Einkauf hast du ... gesammelt" bis zur ersten Zeile, die
+	// weder Posten ("<Label> 0,40 EUR") noch Gruppen-Überschrift ("Bonus-Coupon(s)") ist.
+	let inLoyaltyEarned = false;
+	let loyaltyEarnedGroup: string | undefined;
 
 	for (const rawLine of lines) {
 		const line = normalizeLine(rawLine);
 		if (!line) continue;
+
+		const earned = line.match(LOYALTY_EARNED);
+		if (earned) {
+			meta.loyaltyEarnedCents = parseAmountToCents(earned[1]);
+			meta.loyaltyEarnedBreakdown = [];
+			inLoyaltyEarned = true;
+			loyaltyEarnedGroup = undefined;
+			continue;
+		}
+		if (inLoyaltyEarned) {
+			if (LOYALTY_EARNED_CONTINUATION.test(line)) continue;
+			const entry = !LOYALTY_BALANCE.test(line) && line.match(LOYALTY_EARNED_ENTRY);
+			if (entry) {
+				meta.loyaltyEarnedBreakdown!.push({
+					...(loyaltyEarnedGroup ? { group: loyaltyEarnedGroup } : {}),
+					label: entry[1].trim(),
+					amountCents: parseAmountToCents(entry[2])
+				});
+				continue;
+			}
+			if (LOYALTY_EARNED_GROUP.test(line)) {
+				loyaltyEarnedGroup = line;
+				continue;
+			}
+			inLoyaltyEarned = false;
+		}
 
 		const ustRewe = line.match(UST_ID_REWE);
 		if (ustRewe) {
@@ -218,7 +255,8 @@ export function hasReceiptMeta(meta: ReceiptMeta): boolean {
 			meta.bonNr ||
 			meta.taxBreakdown.length > 0 ||
 			meta.tseSignaturzaehler ||
-			meta.loyaltyNote
+			meta.loyaltyNote ||
+			meta.loyaltyEarnedCents != null
 	);
 }
 
