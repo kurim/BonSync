@@ -8,6 +8,12 @@ const config = {
 		adapter: adapter({
 			out: 'build'
 		}),
+		// Prüft alle 5 Minuten, ob ein neuer Build ausgeliefert wird (siehe +layout.svelte: Hinweis
+		// "Neue Version verfügbar"). Ohne Service Worker gibt es sonst keinen Weg, eine offene bzw.
+		// installierte App auf eine neue Version hinzuweisen.
+		version: {
+			pollInterval: 5 * 60 * 1000
+		},
 		// Content-Security-Policy -- SvelteKit versieht sein eigenes Init-Skript automatisch mit
 		// Nonce/Hash ("auto"), alles andere kommt aus dem eigenen Origin. Externe Ziele sind nur die
 		// MapTiler-Kacheln/-Geocoding (Filial-Karte) und die Logo-Bilder aus dem BonSync-Store-Katalog

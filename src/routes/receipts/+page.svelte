@@ -127,7 +127,43 @@
 
 	<!-- Beleg-Tabelle -->
 	<div class="w-full rounded-2xl bg-surface-container-low shadow-xl overflow-hidden flex flex-col">
-		<div class="overflow-x-auto w-full">
+		{#if data.receipts.length > 0}
+			<!-- Handy (unter 640px): Kartenliste statt der breiten Tabelle, die sonst nur seitlich
+			     scrollbar wäre. Eine Karte ist ein Link auf die Detailansicht. -->
+			<ul class="sm:hidden divide-y divide-surface-container/30">
+				{#each data.receipts as r (r.id)}
+					{@const meta = storeUi(r.storeId)}
+					<li>
+						<a href="/receipts/{r.id}" class="flex items-center gap-3 px-4 py-3 active:bg-surface-container/60">
+							<div class="min-w-0 flex-1">
+								<div class="flex items-center gap-2">
+									<span
+										class="inline-flex flex-shrink-0 items-center gap-1.5 py-1 px-2 rounded-md text-[10px] leading-none font-extrabold uppercase tracking-wider"
+										style="background:color-mix(in srgb, {meta.color} 16%, transparent); color:{meta.color}; border:1px solid color-mix(in srgb, {meta.color} 35%, transparent);"
+									>
+										<span class="w-1.5 h-1.5 rounded-full" style="background:{meta.color}"></span>{meta.name}
+									</span>
+									<span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant whitespace-nowrap">
+										{new Date(r.timestamp).toLocaleDateString('de-DE')} · {new Date(r.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+									</span>
+								</div>
+								<p class="mt-1 truncate font-body-md text-body-md text-on-surface">
+									{r.marketName ?? '—'}{r.marketCity ? `, ${r.marketCity}` : ''}
+								</p>
+							</div>
+							<div class="flex-shrink-0 text-right">
+								<p class="font-label-mono-md text-label-mono-md font-bold text-on-surface whitespace-nowrap">{euro(r.totalCents)}</p>
+								{#if r.itemCount > 0}
+									<p class="font-label-mono-xs text-label-mono-xs text-outline whitespace-nowrap">{r.itemCount} Artikel</p>
+								{/if}
+							</div>
+							<i class="fa-solid fa-chevron-right text-[12px] text-outline flex-shrink-0"></i>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+		<div class={['overflow-x-auto w-full', data.receipts.length > 0 && 'hidden sm:block']}>
 			<table class="w-full text-left border-collapse">
 				<thead>
 					<tr class="bg-surface-container-lowest/60 text-outline uppercase font-label-mono-xs text-label-mono-xs tracking-wider">
