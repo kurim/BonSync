@@ -274,7 +274,7 @@
 								class="flex items-center justify-between gap-space-sm p-space-sm rounded-xl bg-surface-container/60 hover:bg-surface-container border border-transparent transition-all cursor-pointer text-left"
 							>
 								<div class="flex items-center gap-space-sm min-w-0">
-									<span class="flex-shrink-0 py-1 px-2 text-[10px] tracking-wider font-extrabold uppercase text-center rounded-md flex items-center justify-center gap-1.5" style="background:color-mix(in srgb, {ui.color} 16%, transparent); color:{ui.color}; border:1px solid color-mix(in srgb, {ui.color} 35%, transparent);">
+									<span class="inline-flex flex-shrink-0 items-center justify-center gap-1.5 py-1 px-2 rounded-md text-[10px] leading-none font-extrabold uppercase tracking-wider text-center" style="background:color-mix(in srgb, {ui.color} 16%, transparent); color:{ui.color}; border:1px solid color-mix(in srgb, {ui.color} 35%, transparent);">
 										<span class="w-1.5 h-1.5 rounded-full" style="background:{ui.color}"></span>{ui.name}
 									</span>
 									<div class="min-w-0">
