@@ -37,6 +37,8 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ### Fixed
 
+- Installierte App auf iOS 27: Der neue Trennstrich unter der Statusleiste fällt auf dem Handy nicht
+  mehr auf (deckende Kopfzeile mit Farbstreifen über der Statusleisten-Zone).
 - „Abmelden“ war auf dem Handy nicht erreichbar, weil das Konto-Menü dort ausgeblendet war.
 - Breite Tabellen machten die Seite auf dem Handy breiter als den Bildschirm.
 
