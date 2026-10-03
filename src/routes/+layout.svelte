@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { page, navigating } from '$app/state';
+	import { page, navigating, updated } from '$app/state';
 	import { browser } from '$app/environment';
 	import { navItems, isActive } from '$lib/nav';
 	import BottomNav from '$lib/components/BottomNav.svelte';
@@ -85,6 +85,16 @@
 	{@render children()}
 {/if}
 
+{#if updated.current}
+	<!-- Neuer Build auf dem Server (Polling, siehe svelte.config.js#kit.version). Die nächste
+	     Navigation lädt ohnehin die ganze Seite neu; der Hinweis macht das sofort möglich. -->
+	<div class="update-toast" role="status">
+		<i class="fa-solid fa-rotate"></i>
+		<span>Neue Version verfügbar</span>
+		<button type="button" onclick={() => location.reload()}>Neu laden</button>
+	</div>
+{/if}
+
 {#if navigating.to}
 	<!-- Seitenweite Ladeanzeige während einer Navigation (SvelteKit lädt Detailseiten teils live
 	     nach, siehe receipts/[id] -- ohne das wirkt ein Klick so, als hätte er nichts bewirkt).
@@ -114,6 +124,45 @@
 		z-index: 30;
 	}
 
+	.update-toast {
+		position: fixed;
+		right: calc(16px + env(safe-area-inset-right));
+		bottom: calc(16px + env(safe-area-inset-bottom));
+		z-index: 50;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 10px 10px 14px;
+		background: var(--surface-2);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		box-shadow: var(--shadow);
+		font-size: 13px;
+		font-weight: 600;
+	}
+	.update-toast i {
+		color: var(--accent);
+	}
+	.update-toast button {
+		padding: 6px 12px;
+		border: none;
+		border-radius: 7px;
+		background: var(--accent);
+		color: var(--accent-ink);
+		font-weight: 700;
+	}
+	/* Mobil über der Bottom-Navigation (56px) statt darunter, gleiche Query wie in app.css. */
+	@media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
+		.update-toast {
+			left: calc(12px + env(safe-area-inset-left));
+			right: calc(12px + env(safe-area-inset-right));
+			bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
+		}
+		.update-toast span {
+			flex: 1;
+		}
+	}
+
 	.nav-overlay {
 		position: fixed;
 		inset: 0;
@@ -123,6 +172,13 @@
 		justify-content: center;
 		background: color-mix(in srgb, var(--bg) 45%, transparent);
 		cursor: wait;
+		/* Erst nach 150ms sichtbar: schnelle Seitenwechsel sollen nicht aufflackern. Klicks fängt
+		   das Overlay trotzdem sofort ab. */
+		opacity: 0;
+		animation: nav-overlay-in 0.15s ease-out 0.15s forwards;
+	}
+	@keyframes nav-overlay-in {
+		to { opacity: 1; }
 	}
 	.nav-spinner {
 		width: 36px;

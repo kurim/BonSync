@@ -21,6 +21,9 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
   und „Mehr“ für die übrigen Bereiche, die Version und Abmelden. iPad und Desktop behalten die
   Sidebar.
 - `CHANGELOG.md` und automatische GitHub-Releases aus diesem Changelog beim Push eines `v*`-Tags.
+- Hinweis „Neue Version verfügbar“ mit „Neu laden“, sobald auf dem Server ein neuer Build läuft
+  (Prüfung alle 5 Minuten).
+- Kassenzettel auf dem Handy als Kartenliste statt breiter Tabelle.
 
 ### Changed
 
@@ -28,6 +31,9 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 - Inhalte berücksichtigen Notch, Statusleiste und Home-Indikator (`viewport-fit=cover`,
   `env(safe-area-inset-*)`).
 - Volle Höhe über `100dvh`, damit die Ansicht auf iOS nicht mit der Adressleiste springt.
+- Lade-Overlay beim Seitenwechsel erscheint erst nach 150 ms und flackert so bei schnellen
+  Wechseln nicht mehr.
+- Kein Gummiband-Effekt am Seitenende in der installierten App.
 
 ### Fixed
 
