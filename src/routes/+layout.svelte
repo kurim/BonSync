@@ -2,6 +2,8 @@
 	import '../app.css';
 	import { page, navigating } from '$app/state';
 	import { browser } from '$app/environment';
+	import { navItems, isActive } from '$lib/nav';
+	import BottomNav from '$lib/components/BottomNav.svelte';
 
 	let { data, children } = $props();
 
@@ -21,16 +23,6 @@
 			accountMenuOpen = false;
 		}
 	}
-
-	const navItems = [
-		{ href: '/dashboard', label: 'Dashboard', icon: 'fa-solid fa-tachograph-digital' },
-		{ href: '/receipts', label: 'Kassenzettel', icon: 'fa-solid fa-receipt' },
-		{ href: '/dealer-interfaces', label: 'Händler-Schnittstellen', icon: 'fa-regular fa-cloud' },
-		{ href: '/filialen', label: 'Filial-Standorte', icon: 'fa-solid fa-location-dot' },
-		{ href: '/statistics', label: 'Statistiken', icon: 'fa-solid fa-chart-column' },
-		{ href: '/store', label: 'Modul-Store', icon: 'fa-solid fa-shop' },
-		{ href: '/settings', label: 'Einstellungen', icon: 'fa-solid fa-gear' }
-	];
 </script>
 
 {#if data.authenticated && page.url.pathname !== '/onboarding'}
@@ -51,7 +43,8 @@
 				{#each navItems as item (item.href)}
 					<a
 						class="nav-item"
-						class:active={page.url.pathname.startsWith(item.href)}
+						class:active={isActive(page.url.pathname, item.href)}
+						aria-current={isActive(page.url.pathname, item.href) ? 'page' : undefined}
 						href={item.href}
 					>
 						<i class="{item.icon} nav-icon"></i>
@@ -76,10 +69,18 @@
 				</button>
 			</div>
 		</aside>
+		<!-- Nur mobil sichtbar (iPhone/Handy, siehe app.css): schlanke Kopfzeile statt Sidebar. -->
+		<header class="mobile-header">
+			<a href="/dashboard" class="brand-link">
+				<span class="brand-mark"><img src="/logos/bonsync.png" alt="" /></span>
+				<b>BonSync</b>
+			</a>
+		</header>
 		<main>
 			{@render children()}
 		</main>
 	</div>
+	<BottomNav appVersion={data.appVersion} />
 {:else}
 	{@render children()}
 {/if}
@@ -97,6 +98,7 @@
 <svelte:window onclick={onWindowClick} />
 
 <style>
+	.brand-link { display: flex; align-items: center; gap: 8px; }
 	.account-menu-wrap { position: relative; width: 100%; }
 	.account-trigger { width: 100%; justify-content: space-between; }
 	.account-menu {

@@ -61,22 +61,29 @@ button:disabled{ cursor:not-allowed; }
 a{ color:inherit; text-decoration:none; }
 :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
 
+/* Breakpoints wie unter iOS vorgesehen: iPhone (hochkant und quer) bekommt eine Tab-Leiste unten
+   (Bottom-Navigation), iPad und Desktop die Sidebar. "Mobil" heißt daher: schmaler als 768px ODER
+   ein Touch-Gerät mit sehr niedrigem Viewport (Handy quer). Die Desktop-Queries unten sind exakt
+   das Gegenstück dazu -- wer eine davon ändert, muss die anderen mitziehen (Media Queries können
+   keine CSS-Variablen nutzen). */
 .shell{
   display:grid;
   grid-template-columns:232px 1fr;
   min-height:100vh;
+  min-height:100dvh;
 }
 /* Sidebar bleibt fix stehen, nur der Hauptbereich scrollt -- ohne das würde die ganze Seite
-   inkl. Sidebar wegscrollen, sobald der Content (Tabellen, Karten) länger als der Viewport ist. */
-@media (min-width: 861px){
-  .shell{ height:100vh; overflow:hidden; }
+   inkl. Sidebar wegscrollen, sobald der Content (Tabellen, Karten) länger als der Viewport ist.
+   100dvh statt nur 100vh: auf iOS ändert sich die sichtbare Höhe mit der Adressleiste. */
+@media (min-width: 768px) and (min-height: 501px), (min-width: 768px) and (pointer: fine){
+  .shell{ height:100vh; height:100dvh; overflow:hidden; }
   /* overflow-x:hidden explizit setzen -- sonst macht der Browser laut Spezifikation aus einem
      gesetzten overflow-y:auto implizit auch overflow-x:auto, und schon 1px horizontaler
      Rundungs-Overflow (z.B. durch Skalierung) zeigt eine unnötige horizontale Scrollbar. */
-  .sidebar{ height:100vh; overflow-y:auto; overflow-x:hidden; }
-  main{ height:100vh; overflow-y:auto; overflow-x:hidden; }
+  .sidebar{ height:100vh; height:100dvh; overflow-y:auto; overflow-x:hidden; }
+  main{ height:100vh; height:100dvh; overflow-y:auto; overflow-x:hidden; }
 }
-@media (max-width: 1080px) and (min-width: 861px){
+@media (min-width: 768px) and (max-width: 1080px) and (min-height: 501px), (min-width: 768px) and (max-width: 1080px) and (pointer: fine){
   .shell{ grid-template-columns:68px 1fr; }
   .sidebar{ padding:14px 8px; gap:10px; align-items:center; }
   .sidebar .brand{ padding:2px 0 6px; justify-content:center; }
@@ -87,19 +94,33 @@ a{ color:inherit; text-decoration:none; }
   .sidebar .sidebar-foot{ justify-content:center; padding-top:8px; }
   .sidebar .sidebar-foot .foot-label{ display:none; }
 }
-@media (max-width: 860px){
-  .shell{ grid-template-columns:1fr; }
-  .sidebar{ position:sticky; top:0; z-index:20; display:flex; flex-direction:row; align-items:center; height:auto; padding:10px 14px; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; gap:14px; }
-  .sidebar .brand{ margin-bottom:0; }
-  .sidebar nav{ flex-direction:row; gap:4px; }
-  .sidebar .nav-item{ white-space:nowrap; }
-  .sidebar .sidebar-foot{ display:none; }
+
+/* Mobile Kopfzeile + Bottom-Navigation (Markup in +layout.svelte / BottomNav.svelte). Außerhalb
+   der Mobil-Query komplett ausgeblendet; dort ersetzen sie die Sidebar. */
+.mobile-header, .bottom-nav{ display:none; }
+@media (max-width: 767px), (max-height: 500px) and (pointer: coarse){
+  /* minmax(0,1fr) statt 1fr: sonst wächst die Spalte mit breiten Tabellen mit, die Seite wird
+     breiter als der Bildschirm und die feste Bottom-Navigation rutscht aus dem sichtbaren Bereich. */
+  .shell{ grid-template-columns:minmax(0,1fr); }
+  .shell > .sidebar{ display:none; }
+  .mobile-header{
+    display:flex; align-items:center; gap:8px;
+    position:sticky; top:0; z-index:20;
+    /* Im Standalone-Modus liegt die (transparente) iOS-Statusleiste über der Seite. */
+    padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+    background:color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .mobile-header .brand-mark{ width:26px; height:26px; border-radius:6px; }
+  .mobile-header b{ font-size:15px; font-weight:800; letter-spacing:-0.01em; }
+  .bottom-nav{ display:flex; }
 }
 
 /* Manuelles Ein-/Ausblenden der Sidebar-Beschriftung (unabhängig von der Fensterbreite) —
-   dieselben Regeln wie die 1080-861px-Kompaktansicht oben, nur per Klasse statt Media Query.
-   Bewusst nur ab 861px aktiv: unter 860px übernimmt ohnehin die horizontale Mobil-Leiste. */
-@media (min-width: 861px){
+   dieselben Regeln wie die Kompaktansicht oben, nur per Klasse statt Media Query.
+   Bewusst nur mit sichtbarer Sidebar aktiv: mobil übernimmt ohnehin die Bottom-Navigation. */
+@media (min-width: 768px) and (min-height: 501px), (min-width: 768px) and (pointer: fine){
   .shell.compact{ grid-template-columns:68px 1fr; }
   /* Etwas knapper bemessen als die reguläre Sidebar (weniger Padding/Gap) -- reine
      Sicherheitsreserve, damit bei abweichender Windows-Bildschirmskalierung (125%/150%) kein
@@ -170,6 +191,16 @@ nav{ display:flex; flex-direction:column; gap:2px; }
 main{ padding:28px 40px 64px; }
 @media (max-width:1300px){ main{ padding:24px 28px 56px; } }
 @media (max-width:640px){ main{ padding:18px 16px 48px; } }
+/* Mobil (siehe Breakpoint-Kommentar bei .shell): seitlich Safe Areas für iPhones quer, unten Platz
+   für die feste Bottom-Navigation (56px) + Home-Indikator. Steht bewusst NACH den Breiten-Regeln
+   oben, damit deren padding-Kurzschreibweise das hier nicht überschreibt. */
+@media (max-width: 767px), (max-height: 500px) and (pointer: coarse){
+  main{
+    padding-left:calc(16px + env(safe-area-inset-left));
+    padding-right:calc(16px + env(safe-area-inset-right));
+    padding-bottom:calc(56px + env(safe-area-inset-bottom) + 24px);
+  }
+}
 
 .page-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
 .page-head h1{ font-size:22px; font-weight:800; letter-spacing:-0.015em; }

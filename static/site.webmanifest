@@ -1,11 +1,31 @@
 {
+	"id": "/",
 	"name": "BonSync",
 	"short_name": "BonSync",
+	"description": "Kassenbon-Hub für REWE, PENNY, ROSSMANN, LIDL & Co.",
+	"lang": "de",
+	"dir": "ltr",
+	"start_url": "/dashboard",
+	"scope": "/",
+	"display": "standalone",
+	"theme_color": "#090d16",
+	"background_color": "#090d16",
 	"icons": [
-		{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-		{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+		{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+		{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+		{ "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+		{ "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
 	],
-	"theme_color": "#0b1326",
-	"background_color": "#0b1326",
-	"display": "standalone"
+	"shortcuts": [
+		{
+			"name": "Kassenzettel",
+			"url": "/receipts",
+			"icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+		},
+		{
+			"name": "Statistiken",
+			"url": "/statistics",
+			"icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+		}
+	]
 }
