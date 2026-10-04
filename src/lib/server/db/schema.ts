@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey } from 'drizzle-orm/sqlite-core';
 
 /** Ein Store-Modul (rewe/penny/lidl/rossmann) und sein An/Aus- + Verbindungsstatus. */
 export const storeModules = sqliteTable('store_modules', {
@@ -98,8 +98,47 @@ export const appSettings = sqliteTable('app_settings', {
 	// Zeitpunkt, zu dem der Einrichtungsassistent (Passwort ändern + Händler auswählen, siehe
 	// routes/onboarding) abgeschlossen (oder für eine Bestandsinstallation rückwirkend als
 	// abgeschlossen markiert) wurde. NULL heißt: hooks.server.ts leitet auf /onboarding um.
-	onboardingCompletedAt: integer('onboarding_completed_at')
+	onboardingCompletedAt: integer('onboarding_completed_at'),
+	// Wie großzügig "Deals für mich" Angebote auf gekaufte Artikel abbildet: 'variant' (gleiches
+	// Produkt/Variante, z.B. Pepsi Cola <-> Pepsi Cola Zero), 'brand' (+ gleiche Marke, z.B.
+	// Pepsi Max) oder 'category' (+ gleiche Produktart, z.B. Pepsi Cola <-> Coca Cola), siehe
+	// dealMatching.ts.
+	dealsMatchLevel: text('deals_match_level').notNull().default('brand')
 });
+
+/** Vom Nutzer gewählte Märkte, für die Angebote geladen werden (siehe offers.ts). */
+export const selectedMarkets = sqliteTable(
+	'selected_markets',
+	{
+		storeId: text('store_id').notNull(),
+		marketId: text('market_id').notNull(), // modul-eigene Markt-ID
+		name: text('name'),
+		street: text('street'),
+		zipCode: text('zip_code'),
+		city: text('city')
+	},
+	(t) => [primaryKey({ columns: [t.storeId, t.marketId] })]
+);
+
+/** Zuletzt geladene Angebote (je Händler + Markt; marketId '' = händlerweit). */
+export const offers = sqliteTable(
+	'offers',
+	{
+		storeId: text('store_id').notNull(),
+		marketId: text('market_id').notNull().default(''),
+		externalId: text('external_id').notNull(),
+		title: text('title').notNull(),
+		brand: text('brand'),
+		priceCents: integer('price_cents').notNull(),
+		originalPriceCents: integer('original_price_cents'),
+		unitPriceText: text('unit_price_text'),
+		validFrom: integer('valid_from'),
+		validTo: integer('valid_to'),
+		imageUrl: text('image_url'),
+		fetchedAt: integer('fetched_at').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.storeId, t.marketId, t.externalId] })]
+);
 
 /** Persistenter Geocoding-Cache (Adresse -> Koordinaten), siehe geocoding.ts — Adressen ändern
  * sich nicht, ein Re-Geocode bei jedem Seitenaufruf wäre reine API-Kontingent-Verschwendung. */

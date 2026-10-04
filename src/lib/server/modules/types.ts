@@ -62,6 +62,32 @@ export interface ReceiptMeta {
 	extraBenefits?: { label: string; amountCents: number }[];
 }
 
+/** Ein Markt/Filiale eines Händlers, wie das Modul ihn für Angebote adressiert. `id` ist die
+ * modul-eigene, opake Markt-ID (z.B. REWE `wwIdent`) und wird unverändert an `fetchOffers`
+ * zurückgegeben. */
+export interface MarketRef {
+	id: string;
+	name?: string;
+	street?: string;
+	zipCode?: string;
+	city?: string;
+}
+
+/** Ein aktuelles Angebot eines Händlers (Prospekt/Wochenangebot). */
+export interface Offer {
+	externalId: string; // modul-eigene, pro Händler + Markt stabile ID
+	title: string; // z.B. "Pepsi Cola Zero 1,5 l"
+	brand?: string;
+	priceCents: number;
+	originalPriceCents?: number;
+	unitPriceText?: string; // z.B. "1,33 €/l"
+	validFrom?: number; // epoch ms
+	validTo?: number; // epoch ms
+	imageUrl?: string;
+	/** Märkte, für die das Angebot gilt (MarketRef.id). Leer/fehlend = alle abgefragten Märkte. */
+	marketIds?: string[];
+}
+
 /** Store-spezifischer, aber einheitlich verschlüsselt abgelegter Credential-Blob. */
 export type StoredCredentials = Record<string, unknown>;
 
@@ -125,4 +151,13 @@ export interface StoreModule {
 		externalId: string,
 		pdf?: Buffer
 	): Promise<ReceiptSummary['market']>;
+
+	/** Marktsuche für die Angebots-Funktion (PLZ, Ort oder Name; `zip` bevorzugt). Optional --
+	 * Module ohne diese Methode bieten keine Marktauswahl und damit keine Angebote an. */
+	searchMarkets?(creds: StoredCredentials | null, query: { zip?: string; text?: string }): Promise<MarketRef[]>;
+	/** Aktuelle Angebote für die gewählten Märkte. Das Modul entscheidet selbst, ob es pro Markt
+	 * einzeln abfragt oder einen händlerweiten Prospekt liefert (dann `marketIds` weglassen).
+	 * `creds` ist `null`, wenn der Händler nicht verbunden ist -- Module mit anonymem Angebotsabruf
+	 * können trotzdem liefern. */
+	fetchOffers?(creds: StoredCredentials | null, markets: MarketRef[]): Promise<Offer[]>;
 }

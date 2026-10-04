@@ -112,6 +112,30 @@ export function ensureSchema() {
 			lon REAL,
 			fetched_at INTEGER NOT NULL
 		);
+		CREATE TABLE IF NOT EXISTS selected_markets (
+			store_id TEXT NOT NULL,
+			market_id TEXT NOT NULL,
+			name TEXT,
+			street TEXT,
+			zip_code TEXT,
+			city TEXT,
+			PRIMARY KEY (store_id, market_id)
+		);
+		CREATE TABLE IF NOT EXISTS offers (
+			store_id TEXT NOT NULL,
+			market_id TEXT NOT NULL DEFAULT '',
+			external_id TEXT NOT NULL,
+			title TEXT NOT NULL,
+			brand TEXT,
+			price_cents INTEGER NOT NULL,
+			original_price_cents INTEGER,
+			unit_price_text TEXT,
+			valid_from INTEGER,
+			valid_to INTEGER,
+			image_url TEXT,
+			fetched_at INTEGER NOT NULL,
+			PRIMARY KEY (store_id, market_id, external_id)
+		);
 		CREATE TABLE IF NOT EXISTS installed_modules (
 			id TEXT PRIMARY KEY,
 			version TEXT NOT NULL,
@@ -134,7 +158,8 @@ export function ensureSchema() {
 		'ALTER TABLE app_settings ADD COLUMN builtin_modules_seeded_at INTEGER',
 		'ALTER TABLE receipts ADD COLUMN pdf_unavailable INTEGER NOT NULL DEFAULT 0',
 		'ALTER TABLE app_settings ADD COLUMN onboarding_completed_at INTEGER',
-		'ALTER TABLE app_settings ADD COLUMN mqtt_tls INTEGER NOT NULL DEFAULT 0'
+		'ALTER TABLE app_settings ADD COLUMN mqtt_tls INTEGER NOT NULL DEFAULT 0',
+		"ALTER TABLE app_settings ADD COLUMN deals_match_level TEXT NOT NULL DEFAULT 'brand'"
 	]) {
 		try {
 			sqlite.exec(ddl);

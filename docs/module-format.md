@@ -163,6 +163,29 @@ Wichtig, weil BonSync diese Felder 1:1 in feste Datenbankspalten schreibt (`src/
   für REWE aus dem PDF-Kopf tut, siehe [`rewe/_shared/posParser.ts`](https://github.com/kurim/BonSync-Store/blob/main/rewe/_shared/posParser.ts)
   im BonSync-Store). Das Mapping muss hier also schon beim ersten Anlauf stimmen.
 
+### 4.2 Angebote (optional: `searchMarkets` / `fetchOffers`)
+
+Module können aktuelle Händler-Angebote liefern. Beide Methoden sind optional, müssen aber
+**zusammen** implementiert werden -- nur dann taucht das Modul bei „Angebote“ / „Deals für mich“ auf.
+
+```ts
+searchMarkets(creds: object | null, query: { zip?: string; text?: string }): Promise<MarketRef[]>;
+fetchOffers(creds: object | null, markets: MarketRef[]): Promise<Offer[]>;
+```
+
+- `MarketRef`: `{ id, name?, street?, zipCode?, city? }`. `id` ist die modul-eigene Markt-ID und
+  wird unverändert an `fetchOffers` zurückgegeben. `street`/`zipCode` sollten gesetzt sein, damit
+  Filialen aus Belegen automatisch zugeordnet werden können.
+- `Offer`: `{ externalId, title, brand?, priceCents, originalPriceCents?, unitPriceText?, validFrom?,
+  validTo?, imageUrl?, marketIds? }`. `priceCents` ist immer Cent als Integer, Zeitstempel sind
+  epoch ms. `marketIds` weglassen (oder leer), wenn das Angebot für alle abgefragten Märkte gilt.
+- `creds` ist `null`, wenn der Händler nicht verbunden ist -- ein anonymer Abruf darf trotzdem liefern.
+- `fetchOffers` liefert den **kompletten** aktuellen Stand; BonSync ersetzt damit die zuvor
+  gespeicherten Angebote des Händlers (Abruf beim Sync-Intervall und per „Aktualisieren“).
+- `title` sollte den Produktnamen so enthalten, wie er auch auf Belegen steht (inkl. Variante wie
+  „Zero“), `brand` nur, wenn der Händler sie separat angibt -- „Deals für mich“ vergleicht die Namen
+  mit gekauften Artikeln.
+
 ## 5. Module-SDK-Referenz
 
 Ein Modul importiert **keine** App-internen Dateien direkt (kein `../db`, kein `pdfjs-dist`, kein

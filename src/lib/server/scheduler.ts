@@ -3,6 +3,7 @@ import { db } from './db';
 import { appSettings, storeModules } from './db/schema';
 import { listMetas } from './modules/registry';
 import { syncStore } from './sync';
+import { syncAllOffers } from './offers';
 
 // Untergrenze, damit ein versehentlich sehr kleiner Wert nicht die Login-/Rate-Limits der
 // Store-APIs strapaziert (LIDL reCAPTCHA, REWE mTLS-Endpoint etc.).
@@ -30,6 +31,10 @@ async function runCycle(): Promise<void> {
 			if (row && !row.enabled) continue;
 			const result = await syncStore(meta.id);
 			results.push(result.error ? `${meta.id}: ${result.error}` : `${meta.id}: ${result.newReceipts} neu`);
+		}
+		const offerResults = await syncAllOffers();
+		if (offerResults.length > 0) {
+			results.push(...offerResults.map((r) => (r.error ? `${r.storeId} Angebote: ${r.error}` : `${r.storeId}: ${r.count} Angebote`)));
 		}
 		console.log(`[scheduler] Automatischer Sync abgeschlossen (${results.join(', ') || 'keine aktiven Module'})`);
 	} catch (err) {
