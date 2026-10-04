@@ -10,6 +10,8 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-04
+
 ### Added
 
 - Installierbare Web-App (PWA): vollständiges Manifest mit `id`, `start_url`, `scope`, Sprache,
@@ -58,5 +60,6 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 - Content-Security-Policy, Security-Header, Pfadvalidierung und Allowlist für den Store-Katalog.
 
-[Unreleased]: https://github.com/kurim/BonSync/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kurim/BonSync/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kurim/BonSync/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/kurim/BonSync/releases/tag/v0.1.0
