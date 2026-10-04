@@ -4,7 +4,6 @@ import { db } from './db';
 import { credentials, receipts, receiptItems, storeModules, appSettings } from './db/schema';
 import { encryptJson, decryptJson } from './crypto';
 import { getModule } from './modules/registry';
-import { extractPdfText, parseReceiptMeta, hasReceiptMeta } from './receiptPdfParser';
 import { publishSyncUpdate } from './mqtt';
 import type { StoreId, StoredCredentials } from './modules/types';
 
@@ -182,25 +181,14 @@ export async function fetchAndStorePdfAndItems(
 		}
 	}
 
-	if (pdf) {
+	if (pdf && module.fetchReceiptMeta) {
 		try {
-			const meta = parseReceiptMeta(await extractPdfText(pdf));
-			if (module.fetchReceiptLoyalty) {
-				try {
-					const loyalty = await module.fetchReceiptLoyalty(creds, externalId, pdf);
-					if (loyalty) {
-						meta.loyaltyEarnedCents = loyalty.earnedCents;
-						meta.loyaltyEarnedBreakdown = loyalty.breakdown;
-					}
-				} catch {
-					// gesammelter Bonus ist rein informativ -> Fehler hier verwirft nicht die übrigen Metadaten
-				}
-			}
-			if (hasReceiptMeta(meta)) {
+			const meta = await module.fetchReceiptMeta(creds, externalId, pdf);
+			if (meta) {
 				await db.update(receipts).set({ metaJson: JSON.stringify(meta) }).where(eq(receipts.id, id)).run();
 			}
 		} catch {
-			// Metadaten (TSE/Zahlungsart/MwSt.-Aufschlüsselung) sind rein informativ -> bei
+			// Metadaten (TSE/Zahlungsart/MwSt.-Aufschlüsselung/Bonus) sind rein informativ -> bei
 			// Fehlschlag (z.B. unbekanntes Bon-Format) den restlichen Sync nicht abbrechen
 		}
 	}
