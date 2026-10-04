@@ -323,6 +323,23 @@
 				</div>
 			{/if}
 
+			{#if meta?.extraBenefitsCents != null}
+				<div class="rounded-xl bg-surface-container p-space-md shadow-md flex flex-col gap-space-sm">
+					<div class="flex items-center gap-space-sm">
+						<div class="p-2 rounded-lg bg-primary/20 text-primary shrink-0">
+							<i class="fa-solid fa-gift text-[18px]"></i>
+						</div>
+						<span class="font-body-md text-body-md font-bold text-primary">Zusätzliche Vorteile: {euro(meta.extraBenefitsCents)}</span>
+					</div>
+					{#each meta.extraBenefits ?? [] as entry, i (i)}
+						<div class="flex justify-between gap-space-sm text-body-sm text-on-surface-variant">
+							<span>{entry.label}</span>
+							<span class="font-label-mono-sm text-label-mono-sm text-on-surface shrink-0">{euro(entry.amountCents)}</span>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
 			{#if r.savingsCents || coupons.length > 0}
 				<div class="rounded-xl bg-surface-container p-space-md shadow-md flex flex-col gap-space-sm">
 					<div class="flex items-center gap-space-xs font-body-md text-body-md font-bold text-emerald-400">
