@@ -94,7 +94,7 @@
 				{#each filtered as o (o.storeId + o.externalId)}
 					{@const ui = data.storeUi[o.storeId]}
 					<div class="rounded-xl bg-surface-container p-space-md shadow-md flex gap-space-md">
-						{#if o.imageUrl}<img src={o.imageUrl} alt="" class="w-16 h-16 object-contain rounded bg-white shrink-0" loading="lazy" />{/if}
+						{#if o.imageUrl}<img src="/angebote/bild?s={encodeURIComponent(o.storeId)}&id={encodeURIComponent(o.externalId)}" alt="" class="w-16 h-16 object-contain rounded bg-white shrink-0" loading="lazy" onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} />{/if}
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center gap-1.5 mb-1">
 								<span class="w-2 h-2 rounded-full shrink-0" style="background:{ui?.color}"></span>

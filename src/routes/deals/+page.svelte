@@ -55,7 +55,7 @@
 			{#each data.deals as d (d.storeId + d.externalId)}
 				{@const ui = data.storeUi[d.storeId]}
 				<div class="rounded-xl bg-surface-container p-space-md shadow-md flex gap-space-md">
-					{#if d.imageUrl}<img src={d.imageUrl} alt="" class="w-16 h-16 object-contain rounded bg-white shrink-0" loading="lazy" />{/if}
+					{#if d.imageUrl}<img src="/angebote/bild?s={encodeURIComponent(d.storeId)}&id={encodeURIComponent(d.externalId)}" alt="" class="w-16 h-16 object-contain rounded bg-white shrink-0" loading="lazy" onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} />{/if}
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center gap-1.5 mb-1">
 							<span class="w-2 h-2 rounded-full shrink-0" style="background:{ui?.color}"></span>

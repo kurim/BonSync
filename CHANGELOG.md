@@ -12,6 +12,7 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ### Fixed
 
+- Angebote: Produktbilder werden über den BonSync-Server geladen und zwischengespeichert statt direkt vom Händler-CDN (die Content-Security-Policy erlaubt keine fremden Bild-Hosts, und CDNs sperren Hotlinking). Geladen wird erst beim Anzeigen.
 - Angebote: Fehler beim Laden werden jetzt angezeigt (nach dem Hinzufügen eines Marktes und bei „Aktualisieren“), inklusive Anzahl der geladenen Angebote je Händler. Angebote der kommenden Woche zeigen „ab <Datum>“.
 
 ### Added
