@@ -38,7 +38,7 @@ function assertValidStoreModule(mod: unknown, manifest: ModuleManifest): asserts
 			throw new Error(`Modul-Export: "${fn}" fehlt oder ist keine Funktion (Pflichtmethode).`);
 		}
 	}
-	for (const fn of ['beginLogin', 'completeLogin', 'loginWithCredentials', 'fetchReceiptItems', 'fetchReceiptSavings', 'refreshMarketInfo'] as const) {
+	for (const fn of ['beginLogin', 'completeLogin', 'loginWithCredentials', 'fetchReceiptItems', 'fetchReceiptSavings', 'fetchReceiptMeta', 'refreshMarketInfo', 'searchMarkets', 'fetchOffers'] as const) {
 		if (fn in m && typeof m[fn] !== 'function') {
 			throw new Error(`Modul-Export: "${fn}" ist vorhanden, aber keine Funktion.`);
 		}

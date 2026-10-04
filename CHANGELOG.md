@@ -10,6 +10,16 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+### Added
+
+- Neuer Menüpunkt „Angebote“: aktuelle Angebote aller Händler für die gewählten Märkte, mit Suche und
+  Händlerfilter. Märkte werden aus den Filialen der Belege vorgeschlagen oder per PLZ-Suche ergänzt.
+- Neuer Menüpunkt „Deals für mich“: Angebote, die zu bisher gekauften Artikeln passen, mit Kaufanzahl.
+  Wie ähnlich ein Angebot sein darf (gleiches Produkt, gleiche Marke, ähnliche Produktart wie
+  Pepsi Cola ↔ Coca-Cola) ist einstellbar.
+- Modul-Vertrag: optionale Methoden `searchMarkets` und `fetchOffers` (siehe `docs/module-format.md`).
+  Angebote kommen aus den Händler-Modulen -- ohne Modul-Update zeigen die Seiten einen Hinweis.
+
 ## [0.2.1] - 2026-10-04
 
 ### Added
