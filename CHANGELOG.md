@@ -10,6 +10,8 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-04
+
 ### Added
 
 - PENNY-Bon: zusätzliche Vorteile vom Bon-Ende ("Deine zusätzlichen Vorteile heute") werden angezeigt.
