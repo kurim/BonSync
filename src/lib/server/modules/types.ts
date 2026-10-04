@@ -56,6 +56,10 @@ export interface ReceiptMeta {
 	/** Aufschlüsselung des gesammelten Bonus, z.B. { label: "Bonus-Aktion(en)", amountCents: 40 } oder
 	 * { group: "Bonus-Coupon(s)", label: "10% auf REWE Beste W", amountCents: 75 }. */
 	loyaltyEarnedBreakdown?: { group?: string; label: string; amountCents: number }[];
+	/** Zusätzliche Vorteile in Euro am Bon-Ende (PENNY: "Deine zusätzlichen Vorteile heute:" mit
+	 * "Sonstige Vorteile 0,40" und Summe) -- getrennt vom Bonus-Guthaben (loyalty*). */
+	extraBenefitsCents?: number;
+	extraBenefits?: { label: string; amountCents: number }[];
 }
 
 /** Store-spezifischer, aber einheitlich verschlüsselt abgelegter Credential-Blob. */
