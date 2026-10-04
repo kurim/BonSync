@@ -12,11 +12,14 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ### Fixed
 
+- Angebote / Deals für mich: inhaltsgleiche Angebote erscheinen nicht mehr doppelt (REWE führt ein Produkt teils in mehreren Kategorien auf).
+- Angebote / Deals für mich: der Preis bricht nicht mehr um („1,19“ und „€“ in zwei Zeilen).
 - Angebote: Produktbilder werden über den BonSync-Server geladen und zwischengespeichert statt direkt vom Händler-CDN (die Content-Security-Policy erlaubt keine fremden Bild-Hosts, und CDNs sperren Hotlinking). Geladen wird erst beim Anzeigen.
 - Angebote: Fehler beim Laden werden jetzt angezeigt (nach dem Hinzufügen eines Marktes und bei „Aktualisieren“), inklusive Anzahl der geladenen Angebote je Händler. Angebote der kommenden Woche zeigen „ab <Datum>“.
 
 ### Added
 
+- Deals für mich: Treffer mit gleicher Marke und mit ähnlicher Produktart lassen sich einzeln ein- und ausschalten (ersetzt die bisherige Stufenauswahl; bestehende Einstellung wird übernommen).
 - Neuer Menüpunkt „Angebote“: aktuelle Angebote aller Händler für die gewählten Märkte, mit Suche und
   Händlerfilter. Märkte werden aus den Filialen der Belege vorgeschlagen oder per PLZ-Suche ergänzt.
 - Neuer Menüpunkt „Deals für mich“: Angebote, die zu bisher gekauften Artikeln passen, mit Kaufanzahl.

@@ -102,9 +102,9 @@
 							</div>
 							<div class="font-body-md text-body-md font-medium">{o.title}</div>
 							{#if o.brand}<div class="font-body-sm text-body-sm text-on-surface-variant">{o.brand}</div>{/if}
-							<div class="flex items-baseline gap-2 mt-1">
-								<span class="font-headline-sm text-headline-sm font-semibold">{euro(o.priceCents)}</span>
-								{#if o.originalPriceCents}<span class="font-body-sm text-body-sm text-outline line-through">{euro(o.originalPriceCents)}</span>{/if}
+							<div class="flex flex-wrap items-baseline gap-x-2 mt-1">
+								<span class="font-headline-sm text-headline-sm font-semibold whitespace-nowrap">{euro(o.priceCents)}</span>
+								{#if o.originalPriceCents}<span class="font-body-sm text-body-sm text-outline line-through whitespace-nowrap">{euro(o.originalPriceCents)}</span>{/if}
 							</div>
 							{#if o.unitPriceText}<div class="font-body-sm text-body-sm text-on-surface-variant">{o.unitPriceText}</div>{/if}
 							{#if o.validFrom || o.validTo}

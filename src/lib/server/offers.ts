@@ -5,7 +5,7 @@ import { db } from './db';
 import { offers, selectedMarkets, receipts, receiptItems, appSettings } from './db/schema';
 import { getModule } from './modules/registry';
 import { loadCredentials } from './sync';
-import { betterKind, isAllowed, kindRank, MATCH_LEVELS, matchKind, tokenize, type MatchKind, type MatchLevel } from '$lib/dealMatching';
+import { betterKind, isAllowed, kindRank, matchKind, tokenize, type MatchKind, type MatchOptions } from '$lib/dealMatching';
 import type { MarketRef, StoreId } from './modules/types';
 
 /** Räumt zwischengespeicherte Angebotsbilder (siehe routes/angebote/bild) nach 30 Tagen auf. */
@@ -135,10 +135,12 @@ export async function currentOffers() {
 	const key = new Set(selected.map((m) => `${m.storeId}|${m.marketId}`));
 	const stores = new Set(selected.map((m) => m.storeId));
 	const visible = rows.filter((o) => (o.marketId === '' ? stores.has(o.storeId) : key.has(`${o.storeId}|${o.marketId}`)));
-	// Dasselbe Angebot in mehreren gewählten Märkten nur einmal zeigen, aber alle Märkte merken.
+	// Dasselbe Angebot nur einmal zeigen, aber alle Märkte merken: gleiche externalId in mehreren
+	// gewählten Märkten, und inhaltsgleiche Angebote mit unterschiedlicher ID (REWE führt ein
+	// Produkt teils in mehreren Kategorien auf).
 	const merged = new Map<string, (typeof rows)[number] & { marketIds: string[] }>();
 	for (const o of visible) {
-		const k = `${o.storeId}|${o.externalId}`;
+		const k = [o.storeId, o.title, o.unitPriceText ?? '', o.priceCents, o.validFrom ?? '', o.validTo ?? ''].join('|');
 		const e = merged.get(k);
 		if (e) e.marketIds.push(o.marketId);
 		else merged.set(k, { ...o, marketIds: [o.marketId] });
@@ -146,13 +148,13 @@ export async function currentOffers() {
 	return [...merged.values()];
 }
 
-export async function getMatchLevel(): Promise<MatchLevel> {
+export async function getMatchOptions(): Promise<MatchOptions> {
 	const s = await db.select().from(appSettings).where(eq(appSettings.id, 1)).get();
-	return (MATCH_LEVELS as readonly string[]).includes(s?.dealsMatchLevel ?? '') ? (s!.dealsMatchLevel as MatchLevel) : 'brand';
+	return { brand: s?.dealsMatchBrand ?? true, category: s?.dealsMatchCategory ?? false };
 }
 
-export async function setMatchLevel(level: MatchLevel) {
-	await db.update(appSettings).set({ dealsMatchLevel: level }).where(eq(appSettings.id, 1)).run();
+export async function setMatchOptions(options: MatchOptions) {
+	await db.update(appSettings).set({ dealsMatchBrand: options.brand, dealsMatchCategory: options.category }).where(eq(appSettings.id, 1)).run();
 }
 
 export interface Deal {
@@ -166,7 +168,7 @@ export interface Deal {
 
 /** Gekaufte Artikel (nicht stornierte Belege, optional seit `sinceMs`) zu Namen mit Stückzahl
  * zusammenfassen und mit den aktuellen Angeboten abgleichen. */
-export async function computeDeals(level: MatchLevel, sinceMs: number | null = Date.now() - 365 * 24 * 3600_000): Promise<Deal[]> {
+export async function computeDeals(options: MatchOptions, sinceMs: number | null = Date.now() - 365 * 24 * 3600_000): Promise<Deal[]> {
 	const current = await currentOffers();
 	if (current.length === 0) return [];
 
@@ -194,7 +196,7 @@ export async function computeDeals(level: MatchLevel, sinceMs: number | null = D
 		const hits: { name: string; count: number }[] = [];
 		for (const p of purchased.values()) {
 			const k = matchKind(p.tokens, offerTokens);
-			if (!k || !isAllowed(k, level)) continue;
+			if (!k || !isAllowed(k, options)) continue;
 			kind = kind ? betterKind(kind, k) : k;
 			hits.push({ name: p.name, count: p.count });
 		}
