@@ -58,6 +58,12 @@
 		<p class="mb-space-md rounded-xl bg-error-container text-on-error-container p-space-md font-body-sm text-body-sm">{form.refreshError}</p>
 	{/if}
 
+	{#if form?.refreshed}
+		<p class="mb-space-md rounded-xl bg-surface-container p-space-md font-body-sm text-body-sm">
+			Geladen: {form.refreshed.map((r) => `${data.storeUi[r.storeId]?.name ?? r.storeId} ${r.count} Angebot${r.count === 1 ? '' : 'e'}`).join(', ') || 'kein Händler mit gewähltem Markt'}.
+		</p>
+	{/if}
+
 	{#if !data.offersSupported}
 		<p class="rounded-xl bg-surface-container p-space-lg text-on-surface-variant font-body-sm text-body-sm">
 			Keines der installierten Module liefert Angebote. Aktualisiere die Module im <a href="/store" class="underline">Modul-Store</a>.
@@ -101,7 +107,11 @@
 								{#if o.originalPriceCents}<span class="font-body-sm text-body-sm text-outline line-through">{euro(o.originalPriceCents)}</span>{/if}
 							</div>
 							{#if o.unitPriceText}<div class="font-body-sm text-body-sm text-on-surface-variant">{o.unitPriceText}</div>{/if}
-							{#if o.validTo}<div class="font-label-mono-xs text-label-mono-xs text-outline mt-1">gültig bis {dateFmt.format(o.validTo)}</div>{/if}
+							{#if o.validFrom || o.validTo}
+								<div class="font-label-mono-xs text-label-mono-xs text-outline mt-1">
+									{o.validFrom && o.validFrom > Date.now() ? `ab ${dateFmt.format(o.validFrom)} ` : ''}{o.validTo ? `gültig bis ${dateFmt.format(o.validTo)}` : ''}
+								</div>
+							{/if}
 						</div>
 					</div>
 				{/each}
