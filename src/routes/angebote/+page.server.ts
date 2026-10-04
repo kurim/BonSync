@@ -21,6 +21,7 @@ export const load: PageServerLoad = async () => {
 				priceCents: o.priceCents,
 				originalPriceCents: o.originalPriceCents,
 				unitPriceText: o.unitPriceText,
+				validFrom: o.validFrom,
 				validTo: o.validTo,
 				imageUrl: o.imageUrl,
 				markets: o.marketIds.filter((id) => id !== '').map((id) => marketName.get(`${o.storeId}|${id}`) ?? id)
@@ -34,6 +35,6 @@ export const actions: Actions = {
 		const results = await syncAllOffers();
 		const errors = results.filter((r) => r.error).map((r) => `${r.storeId}: ${r.error}`);
 		if (errors.length > 0) return fail(502, { refreshError: errors.join(' · ') });
-		return { refreshed: results.reduce((s, r) => s + r.count, 0) };
+		return { refreshed: results.map((r) => ({ storeId: r.storeId, count: r.count })) };
 	}
 };

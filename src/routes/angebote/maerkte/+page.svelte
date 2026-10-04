@@ -24,6 +24,7 @@
 			Keines der installierten Module bietet Angebote an. Aktualisiere die Module im <a href="/store" class="underline">Modul-Store</a>.
 		</p>
 	{:else}
+		{#if form?.syncResult}<p class="rounded-xl bg-surface-container p-space-md font-body-sm text-body-sm">{form.syncResult}</p>{/if}
 		{#if form?.addError}<p class="rounded-xl bg-error-container text-on-error-container p-space-md font-body-sm text-body-sm">{form.addError}</p>{/if}
 
 		<section class="flex flex-col gap-space-sm">

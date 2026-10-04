@@ -10,6 +10,10 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+### Fixed
+
+- Angebote: Fehler beim Laden werden jetzt angezeigt (nach dem Hinzufügen eines Marktes und bei „Aktualisieren“), inklusive Anzahl der geladenen Angebote je Händler. Angebote der kommenden Woche zeigen „ab <Datum>“.
+
 ### Added
 
 - Neuer Menüpunkt „Angebote“: aktuelle Angebote aller Händler für die gewählten Märkte, mit Suche und

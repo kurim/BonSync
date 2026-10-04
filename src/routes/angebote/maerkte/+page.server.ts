@@ -62,8 +62,8 @@ export const actions: Actions = {
 			zipCode: String(f.get('zipCode') ?? '') || undefined,
 			city: String(f.get('city') ?? '') || undefined
 		});
-		void syncOffers(storeId);
-		return { added: true };
+		const sync = await syncOffers(storeId);
+		return { added: true, syncResult: sync.error ? `Angebote konnten nicht geladen werden: ${sync.error}` : `${sync.count} Angebote geladen.` };
 	},
 	adopt: async ({ request }) => {
 		const f = await request.formData();
@@ -73,8 +73,8 @@ export const actions: Actions = {
 			const market = await resolveFiliale(storeId, { street: String(f.get('street') ?? ''), zip: String(f.get('zip') ?? '') });
 			if (!market) return fail(404, { addError: 'Diese Filiale wurde in der Marktsuche des Händlers nicht gefunden -- bitte per PLZ-Suche wählen.' });
 			await addSelectedMarket(storeId, market);
-			void syncOffers(storeId);
-			return { added: true };
+			const sync = await syncOffers(storeId);
+			return { added: true, syncResult: sync.error ? `Angebote konnten nicht geladen werden: ${sync.error}` : `${sync.count} Angebote geladen.` };
 		} catch (err) {
 			return fail(502, { addError: err instanceof Error ? err.message : String(err) });
 		}
