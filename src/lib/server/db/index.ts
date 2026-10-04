@@ -168,6 +168,20 @@ export function ensureSchema() {
 		}
 	}
 
+	// Einmalige Übernahme des alten Stufenmodells (deals_match_level) in die beiden Schalter -- nur
+	// wenn die Spalten gerade neu angelegt wurden, sonst würde jeder Start spätere Änderungen überschreiben.
+	try {
+		sqlite.exec('ALTER TABLE app_settings ADD COLUMN deals_match_brand INTEGER NOT NULL DEFAULT 1');
+		sqlite.exec('ALTER TABLE app_settings ADD COLUMN deals_match_category INTEGER NOT NULL DEFAULT 0');
+		sqlite.exec(`
+			UPDATE app_settings SET
+				deals_match_brand = CASE WHEN deals_match_level = 'variant' THEN 0 ELSE 1 END,
+				deals_match_category = CASE WHEN deals_match_level = 'category' THEN 1 ELSE 0 END
+		`);
+	} catch {
+		// Spalten existieren bereits
+	}
+
 	// Bestandsinstallationen (liefen schon vor Einführung des Onboardings, erkennbar an einem
 	// gesetzten builtin_modules_seeded_at) gelten rückwirkend als bereits onboarded -- sonst würde
 	// ein bestehender Nutzer nach einem Update plötzlich in den Einrichtungsassistenten geschickt.

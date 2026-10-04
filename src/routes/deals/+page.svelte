@@ -1,15 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { euro } from '$lib/stores-ui';
-	import { MATCH_KIND_LABEL, type MatchLevel } from '$lib/dealMatching';
+	import { MATCH_KIND_LABEL } from '$lib/dealMatching';
 
 	let { data } = $props();
 
-	const LEVELS: { id: MatchLevel; label: string; hint: string }[] = [
-		{ id: 'variant', label: 'Gleiches Produkt', hint: 'z.B. Pepsi Cola ↔ Pepsi Cola Zero' },
-		{ id: 'brand', label: '+ gleiche Marke', hint: 'z.B. Pepsi Max ↔ Pepsi Cola' },
-		{ id: 'category', label: '+ ähnliche Produktart', hint: 'z.B. Pepsi Cola ↔ Coca-Cola' }
-	];
 	const dateFmt = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit' });
 	let formEl: HTMLFormElement | undefined = $state();
 </script>
@@ -29,16 +24,15 @@
 				Aktuelle Angebote, die zu dem passen, was du in den letzten 12 Monaten gekauft hast.
 			</p>
 		</div>
-		<form bind:this={formEl} method="POST" action="?/level" use:enhance={() => async ({ update }) => update({ reset: false })}>
-			<select
-				name="level"
-				value={data.level}
-				onchange={() => formEl?.requestSubmit()}
-				class="h-10 px-space-md bg-surface-container-low rounded-xl font-body-sm text-body-sm cursor-pointer"
-				aria-label="Wie ähnlich darf ein Angebot sein?"
-			>
-				{#each LEVELS as l (l.id)}<option value={l.id}>{l.label} ({l.hint})</option>{/each}
-			</select>
+		<form bind:this={formEl} method="POST" action="?/options" use:enhance={() => async ({ update }) => update({ reset: false })} class="flex flex-col gap-1 font-body-sm text-body-sm">
+			<label class="flex items-center gap-2 cursor-pointer">
+				<input type="checkbox" name="brand" checked={data.matchOptions.brand} onchange={() => formEl?.requestSubmit()} class="cursor-pointer" />
+				Gleiche Marke zeigen <span class="text-outline">(z.B. Exquisa Sahnig ↔ Exquisa Skyr Drink)</span>
+			</label>
+			<label class="flex items-center gap-2 cursor-pointer">
+				<input type="checkbox" name="category" checked={data.matchOptions.category} onchange={() => formEl?.requestSubmit()} class="cursor-pointer" />
+				Ähnliche Produktart zeigen <span class="text-outline">(z.B. Pepsi Cola ↔ Coca-Cola)</span>
+			</label>
 		</form>
 	</div>
 
@@ -63,9 +57,9 @@
 							<span class="ml-auto font-label-mono-xs text-label-mono-xs px-1.5 py-0.5 rounded bg-primary/20 text-primary">{d.count}× gekauft</span>
 						</div>
 						<div class="font-body-md text-body-md font-medium">{d.title}</div>
-						<div class="flex items-baseline gap-2 mt-1">
-							<span class="font-headline-sm text-headline-sm font-semibold">{euro(d.priceCents)}</span>
-							{#if d.originalPriceCents}<span class="font-body-sm text-body-sm text-outline line-through">{euro(d.originalPriceCents)}</span>{/if}
+						<div class="flex flex-wrap items-baseline gap-x-2 mt-1">
+							<span class="font-headline-sm text-headline-sm font-semibold whitespace-nowrap">{euro(d.priceCents)}</span>
+							{#if d.originalPriceCents}<span class="font-body-sm text-body-sm text-outline line-through whitespace-nowrap">{euro(d.originalPriceCents)}</span>{/if}
 							{#if d.unitPriceText}<span class="font-body-sm text-body-sm text-on-surface-variant">{d.unitPriceText}</span>{/if}
 						</div>
 						<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">

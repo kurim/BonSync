@@ -1,16 +1,14 @@
-import { fail } from '@sveltejs/kit';
 import { getStoreUi } from '$lib/stores-ui';
-import { MATCH_LEVELS, type MatchLevel } from '$lib/dealMatching';
 import { listMetas, resolveUi } from '$lib/server/modules/registry';
-import { computeDeals, getMatchLevel, listSelectedMarkets, setMatchLevel } from '$lib/server/offers';
+import { computeDeals, getMatchOptions, listSelectedMarkets, setMatchOptions } from '$lib/server/offers';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-	const level = await getMatchLevel();
-	const [deals, markets] = await Promise.all([computeDeals(level), listSelectedMarkets()]);
+	const matchOptions = await getMatchOptions();
+	const [deals, markets] = await Promise.all([computeDeals(matchOptions), listSelectedMarkets()]);
 	const storeUi = Object.fromEntries(listMetas().map((m) => [m.id, getStoreUi(m.id, m.displayName, resolveUi(m.id))]));
 	return {
-		level,
+		matchOptions,
 		hasMarkets: markets.length > 0,
 		storeUi,
 		deals: deals.map((d) => ({
@@ -31,10 +29,9 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	level: async ({ request }) => {
-		const level = String((await request.formData()).get('level') ?? '');
-		if (!(MATCH_LEVELS as readonly string[]).includes(level)) return fail(400, { error: 'Ungültige Stufe.' });
-		await setMatchLevel(level as MatchLevel);
+	options: async ({ request }) => {
+		const f = await request.formData();
+		await setMatchOptions({ brand: f.get('brand') === 'on', category: f.get('category') === 'on' });
 		return { saved: true };
 	}
 };

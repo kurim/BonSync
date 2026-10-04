@@ -3,14 +3,16 @@
 // ("PEPSI COLA ZERO 1,5L EW"), also wird normalisiert und über Token-Mengen verglichen.
 // Rein und ohne Server-Importe, damit es auch clientseitig/in Tests nutzbar bleibt.
 
-export type MatchLevel = 'variant' | 'brand' | 'category';
-export const MATCH_LEVELS: readonly MatchLevel[] = ['variant', 'brand', 'category'];
+/** Welche unschärferen Treffer zusätzlich zu "gleiches Produkt"/"Variante" gezeigt werden. */
+export interface MatchOptions {
+	brand: boolean; // gleiche Marke, z.B. Exquisa Sahnig <-> Exquisa Skyr Drink
+	category: boolean; // ähnliche Produktart, z.B. Pepsi Cola <-> Coca-Cola
+}
 
 /** Wie nah ein Angebot am gekauften Artikel liegt (aufsteigend unschärfer). */
 export type MatchKind = 'same' | 'variant' | 'brand' | 'category';
 
 const KIND_RANK: Record<MatchKind, number> = { same: 0, variant: 1, brand: 2, category: 3 };
-const LEVEL_MAX_RANK: Record<MatchLevel, number> = { variant: 1, brand: 2, category: 3 };
 
 // Wörter ohne Aussagekraft für die Produktidentität (Verpackung, Werbefloskeln, Mengen-Füller).
 const STOPWORDS = new Set([
@@ -73,8 +75,10 @@ export function matchKind(purchased: string[], offer: string[]): MatchKind | nul
 	return null;
 }
 
-export function isAllowed(kind: MatchKind, level: MatchLevel): boolean {
-	return KIND_RANK[kind] <= LEVEL_MAX_RANK[level];
+export function isAllowed(kind: MatchKind, options: MatchOptions): boolean {
+	if (kind === 'brand') return options.brand;
+	if (kind === 'category') return options.category;
+	return true;
 }
 
 export function betterKind(a: MatchKind, b: MatchKind): MatchKind {

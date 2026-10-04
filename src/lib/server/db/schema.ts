@@ -99,11 +99,12 @@ export const appSettings = sqliteTable('app_settings', {
 	// routes/onboarding) abgeschlossen (oder für eine Bestandsinstallation rückwirkend als
 	// abgeschlossen markiert) wurde. NULL heißt: hooks.server.ts leitet auf /onboarding um.
 	onboardingCompletedAt: integer('onboarding_completed_at'),
-	// Wie großzügig "Deals für mich" Angebote auf gekaufte Artikel abbildet: 'variant' (gleiches
-	// Produkt/Variante, z.B. Pepsi Cola <-> Pepsi Cola Zero), 'brand' (+ gleiche Marke, z.B.
-	// Pepsi Max) oder 'category' (+ gleiche Produktart, z.B. Pepsi Cola <-> Coca Cola), siehe
-	// dealMatching.ts.
-	dealsMatchLevel: text('deals_match_level').notNull().default('brand')
+	// Veraltet (Stufenmodell), nur noch zur einmaligen Übernahme in die beiden Schalter unten.
+	dealsMatchLevel: text('deals_match_level').notNull().default('brand'),
+	// "Deals für mich": zusätzlich zu gleichem Produkt/Variante auch Treffer mit gleicher Marke
+	// bzw. ähnlicher Produktart anzeigen (siehe dealMatching.ts).
+	dealsMatchBrand: integer('deals_match_brand', { mode: 'boolean' }).notNull().default(true),
+	dealsMatchCategory: integer('deals_match_category', { mode: 'boolean' }).notNull().default(false)
 });
 
 /** Vom Nutzer gewählte Märkte, für die Angebote geladen werden (siehe offers.ts). */
