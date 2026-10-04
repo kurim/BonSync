@@ -213,7 +213,7 @@
 					</div>
 
 					<!-- Echte MwSt.-Aufschlüsselung aus dem Beleg (kein fixer %-Satz je Steuercode -
-					     variiert je Kassensystem, siehe receiptPdfParser.ts parseReceiptMeta) -->
+					     variiert je Kassensystem, liefert das Modul über fetchReceiptMeta) -->
 					{#if meta && meta.taxBreakdown.length > 0}
 						<div class="mt-space-sm p-space-xs rounded bg-surface-container-high/60 flex flex-col gap-1">
 							<div class="grid grid-cols-[1.3fr_1fr_1fr_1fr] text-outline font-label-mono-xs text-label-mono-xs uppercase pb-1 border-b border-outline-variant/30">

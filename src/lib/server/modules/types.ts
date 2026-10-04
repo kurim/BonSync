@@ -105,6 +105,14 @@ export interface StoreModule {
 		externalId: string,
 		pdf?: Buffer
 	): Promise<ReceiptSavings | null>;
+	/** Zusätzliche Belegmetadaten (TSE, Zahlungsart, MwSt.-Aufschlüsselung, Bonus etc.), sofern der
+	 * Beleg sie ausweist (optional, rein informativ). Die Erkennung ist Sache des Moduls -- die
+	 * Basis-App speichert und zeigt nur an. `null`, wenn nichts erkannt wurde. */
+	fetchReceiptMeta?(
+		creds: StoredCredentials,
+		externalId: string,
+		pdf?: Buffer
+	): Promise<ReceiptMeta | null>;
 	/** Versucht Marktdaten nachträglich aufzulösen, z.B. wenn die Liste-API dafür `null`
 	 * geliefert hatte (beobachtet bei PENNY: inkonsistent) — bei "Neu einlesen" erneut probiert,
 	 * ohne bereits vorhandene, gute Marktdaten zu überschreiben (nur bei Treffer angewendet). */
