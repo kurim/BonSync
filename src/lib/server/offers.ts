@@ -1,3 +1,5 @@
+import { existsSync, readdirSync, statSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import { and, eq, inArray, lt, or, isNull, gte } from 'drizzle-orm';
 import { db } from './db';
 import { offers, selectedMarkets, receipts, receiptItems, appSettings } from './db/schema';
@@ -5,6 +7,20 @@ import { getModule } from './modules/registry';
 import { loadCredentials } from './sync';
 import { betterKind, isAllowed, kindRank, MATCH_LEVELS, matchKind, tokenize, type MatchKind, type MatchLevel } from '$lib/dealMatching';
 import type { MarketRef, StoreId } from './modules/types';
+
+/** Räumt zwischengespeicherte Angebotsbilder (siehe routes/angebote/bild) nach 30 Tagen auf. */
+function pruneImageCache() {
+	const dir = join(process.env.DATA_DIR ?? './data', 'cache', 'offer-images');
+	if (!existsSync(dir)) return;
+	const cutoff = Date.now() - 30 * 24 * 3600_000;
+	for (const f of readdirSync(dir)) {
+		try {
+			if (statSync(join(dir, f)).mtimeMs < cutoff) unlinkSync(join(dir, f));
+		} catch {
+			// Datei wurde parallel entfernt
+		}
+	}
+}
 
 export async function listSelectedMarkets() {
 	return db.select().from(selectedMarkets).all();
@@ -94,6 +110,7 @@ export async function syncOffers(storeId: StoreId): Promise<OfferSyncResult> {
 		for (let i = 0; i < rows.length; i += 100) {
 			await db.insert(offers).values(rows.slice(i, i + 100)).onConflictDoNothing().run();
 		}
+		pruneImageCache();
 		return { storeId, count: rows.length };
 	} catch (err) {
 		return { storeId, count: 0, error: err instanceof Error ? err.message : String(err) };
