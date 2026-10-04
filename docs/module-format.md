@@ -113,6 +113,7 @@ Methoden (aus `src/lib/server/modules/types.ts`, `StoreModule`-Interface):
 | `loginWithCredentials` | nur bei `credentials` | `(fields: Record<string,string>) => Promise<StoredCredentials>` | Direkter Login mit z.B. E-Mail+Passwort. |
 | `fetchReceiptItems` | optional | `(creds, externalId, pdf?) => Promise<ReceiptItem[]>` | Strukturierte Artikelzeilen, falls verfügbar. |
 | `fetchReceiptSavings` | optional | `(creds, externalId, pdf?) => Promise<ReceiptSavings \| null>` | Coupon-/Rabatt-Ersparnis. |
+| `fetchReceiptLoyalty` | optional | `(creds, externalId, pdf?) => Promise<ReceiptLoyalty \| null>` | Beim Einkauf gesammelter Bonus (`{ earnedCents, breakdown }`), z.B. REWE Bonus-Guthaben. |
 | `refreshMarketInfo` | optional | `(creds, externalId, pdf?) => Promise<ReceiptSummary['market']>` | Nachträgliche Markt-Auflösung (z.B. bei "Neu einlesen"). |
 
 `beginLogin`+`completeLogin` bzw. `loginWithCredentials` sind **verpflichtend**, wenn die

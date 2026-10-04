@@ -185,6 +185,17 @@ export async function fetchAndStorePdfAndItems(
 	if (pdf) {
 		try {
 			const meta = parseReceiptMeta(await extractPdfText(pdf));
+			if (module.fetchReceiptLoyalty) {
+				try {
+					const loyalty = await module.fetchReceiptLoyalty(creds, externalId, pdf);
+					if (loyalty) {
+						meta.loyaltyEarnedCents = loyalty.earnedCents;
+						meta.loyaltyEarnedBreakdown = loyalty.breakdown;
+					}
+				} catch {
+					// gesammelter Bonus ist rein informativ -> Fehler hier verwirft nicht die übrigen Metadaten
+				}
+			}
 			if (hasReceiptMeta(meta)) {
 				await db.update(receipts).set({ metaJson: JSON.stringify(meta) }).where(eq(receipts.id, id)).run();
 			}

@@ -33,6 +33,16 @@ export interface ReceiptSavings {
 	coupons: { label: string; amountCents: number }[];
 }
 
+/** Bonus-/Treue-Vorteil eines einzelnen Belegs, sofern das Modul ihn kennt (z.B. REWE: "Mit diesem
+ * Einkauf hast du 1,15 EUR REWE Bonus-Guthaben gesammelt"). Die Erkennung liegt im Modul, die
+ * Basis-App speichert und zeigt das Ergebnis nur an. */
+export interface ReceiptLoyalty {
+	earnedCents: number;
+	/** Aufschlüsselung, z.B. { label: "Bonus-Aktion(en)", amountCents: 40 } oder
+	 * { group: "Bonus-Coupon(s)", label: "10% auf REWE Beste W", amountCents: 75 }. */
+	breakdown: { group?: string; label: string; amountCents: number }[];
+}
+
 /** Zusätzliche, rein informative Metadaten aus dem PDF-Text (TSE-Signatur, Zahlungsart,
  * MwSt.-Aufschlüsselung etc.) — je nach Store/Bon-Format unterschiedlich vollständig, daher
  * jedes Feld optional. Keine Erfindung: nur was tatsächlich auf dem jeweiligen Bon steht. */
@@ -105,6 +115,12 @@ export interface StoreModule {
 		externalId: string,
 		pdf?: Buffer
 	): Promise<ReceiptSavings | null>;
+	/** Beim Einkauf gesammelter Bonus des Belegs, sofern der Beleg ihn ausweist (optional, rein informativ). */
+	fetchReceiptLoyalty?(
+		creds: StoredCredentials,
+		externalId: string,
+		pdf?: Buffer
+	): Promise<ReceiptLoyalty | null>;
 	/** Versucht Marktdaten nachträglich aufzulösen, z.B. wenn die Liste-API dafür `null`
 	 * geliefert hatte (beobachtet bei PENNY: inkonsistent) — bei "Neu einlesen" erneut probiert,
 	 * ohne bereits vorhandene, gute Marktdaten zu überschreiben (nur bei Treffer angewendet). */
