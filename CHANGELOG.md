@@ -10,6 +10,8 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-05
+
 ### Added
 
 - Deals für mich: „Preis überwachen“ je Produkt. Eigene Produktseite mit Preisverlauf je Markt und Schalter zum Überwachen, dazu eine Liste der überwachten Produkte. Der Angebotspreis wird ab jetzt bei jedem Abruf pro Markt und Tag festgehalten; der Verlauf füllt sich ab dem nächsten Abruf.
