@@ -2,11 +2,13 @@
 	import { enhance } from '$app/forms';
 	import { euro } from '#lib/stores-ui';
 	import { MATCH_KIND_LABEL } from '#lib/dealMatching';
+	import PriceHistory from '#lib/components/PriceHistory.svelte';
 
 	let { data } = $props();
 
 	const dateFmt = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit' });
 	let formEl: HTMLFormElement | undefined = $state();
+	let openKey = $state<string | null>(null);
 </script>
 
 <svelte:head><title>Deals für mich — BonSync</title></svelte:head>
@@ -80,6 +82,15 @@
 							{MATCH_KIND_LABEL[d.kind]} · du kaufst: {d.items.map((i) => `${i.name} (${i.count}×)`).join(', ')}
 						</div>
 						{#if d.validTo}<div class="font-label-mono-xs text-label-mono-xs text-outline mt-1">gültig bis {dateFmt.format(d.validTo)}</div>{/if}
+						<button
+							type="button"
+							class="mt-1 font-label-mono-xs text-label-mono-xs text-primary underline"
+							aria-expanded={openKey === d.storeId + d.externalId}
+							onclick={() => (openKey = openKey === d.storeId + d.externalId ? null : d.storeId + d.externalId)}
+						>
+							<i class="fa-solid fa-chart-line"></i> Preisverlauf
+						</button>
+						{#if openKey === d.storeId + d.externalId}<PriceHistory storeId={d.storeId} title={d.title} />{/if}
 					</div>
 				</div>
 			{/each}

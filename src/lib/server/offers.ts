@@ -1,8 +1,8 @@
 import { existsSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { and, eq, inArray, lt, or, isNull, gte } from 'drizzle-orm';
+import { and, eq, inArray, lt, or, isNull, gte, sql } from 'drizzle-orm';
 import { db } from './db';
-import { offers, selectedMarkets, receipts, receiptItems, appSettings, hiddenOffers } from './db/schema';
+import { offers, selectedMarkets, receipts, receiptItems, appSettings, hiddenOffers, offerPriceHistory } from './db/schema';
 import { getModule } from './modules/registry';
 import { loadCredentials } from './sync';
 import { betterKind, isAllowed, kindRank, matchKind, tokenize, type MatchKind, type MatchOptions } from '#lib/dealMatching';
@@ -111,11 +111,73 @@ export async function syncOffers(storeId: StoreId): Promise<OfferSyncResult> {
 		for (let i = 0; i < rows.length; i += 100) {
 			await db.insert(offers).values(rows.slice(i, i + 100)).onConflictDoNothing().run();
 		}
+		await recordPriceHistory(rows, now);
 		pruneImageCache();
 		return { storeId, count: rows.length };
 	} catch (err) {
 		return { storeId, count: 0, error: err instanceof Error ? err.message : String(err) };
 	}
+}
+
+/** Hält den Preis jedes abgerufenen Angebots pro Markt und Tag fest (mehrere Abrufe am selben Tag
+ * überschreiben sich). Fehler hier dürfen den Abruf selbst nicht scheitern lassen. */
+async function recordPriceHistory(
+	rows: { storeId: string; marketId: string; title: string; priceCents: number; originalPriceCents: number | null }[],
+	now: number
+) {
+	try {
+		const day = new Date(now).toISOString().slice(0, 10);
+		const byKey = new Map<string, typeof offerPriceHistory.$inferInsert>();
+		for (const r of rows) {
+			const nameKey = hiddenKey(r.title);
+			const key = `${r.storeId}|${nameKey}|${r.marketId}`;
+			const prev = byKey.get(key);
+			// Dasselbe Produkt kann in mehreren Kategorien stehen: der günstigste Preis zählt.
+			if (prev && prev.priceCents <= r.priceCents) continue;
+			byKey.set(key, { storeId: r.storeId, nameKey, marketId: r.marketId, day, priceCents: r.priceCents, originalPriceCents: r.originalPriceCents });
+		}
+		const values = [...byKey.values()];
+		for (let i = 0; i < values.length; i += 100) {
+			await db
+				.insert(offerPriceHistory)
+				.values(values.slice(i, i + 100))
+				.onConflictDoUpdate({
+					target: [offerPriceHistory.storeId, offerPriceHistory.nameKey, offerPriceHistory.marketId, offerPriceHistory.day],
+					set: { priceCents: sql`excluded.price_cents`, originalPriceCents: sql`excluded.original_price_cents` }
+				})
+				.run();
+		}
+	} catch (err) {
+		console.error('Preisverlauf konnte nicht gespeichert werden:', err);
+	}
+}
+
+export interface PriceSeries {
+	marketId: string;
+	label: string;
+	points: { day: string; priceCents: number }[];
+}
+
+/** Preisverlauf eines Produkts, je Markt eine Reihe (älteste zuerst). */
+export async function priceHistory(storeId: StoreId, title: string): Promise<PriceSeries[]> {
+	const rows = await db
+		.select()
+		.from(offerPriceHistory)
+		.where(and(eq(offerPriceHistory.storeId, storeId), eq(offerPriceHistory.nameKey, hiddenKey(title))))
+		.all();
+	const markets = await db.select().from(selectedMarkets).where(eq(selectedMarkets.storeId, storeId)).all();
+	const label = (id: string) => {
+		const m = markets.find((x) => x.marketId === id);
+		return m ? [m.name, m.city].filter(Boolean).join(', ') || id : id || 'Markt';
+	};
+	const series = new Map<string, PriceSeries>();
+	for (const r of rows) {
+		let s = series.get(r.marketId);
+		if (!s) series.set(r.marketId, (s = { marketId: r.marketId, label: label(r.marketId), points: [] }));
+		s.points.push({ day: r.day, priceCents: r.priceCents });
+	}
+	for (const s of series.values()) s.points.sort((a, b) => a.day.localeCompare(b.day));
+	return [...series.values()].sort((a, b) => a.label.localeCompare(b.label, 'de'));
 }
 
 export async function syncAllOffers(): Promise<OfferSyncResult[]> {

@@ -12,6 +12,7 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ### Added
 
+- Deals für mich: „Preisverlauf“ je Produkt, getrennt nach Markt. Der Angebotspreis wird ab jetzt bei jedem Abruf pro Markt und Tag festgehalten; der Verlauf füllt sich ab dem nächsten Abruf.
 - Angebote / Deals für mich: einzelne Produkte lassen sich dauerhaft ausblenden; über „Ausgeblendete anzeigen“ erscheinen sie abgeblendet und können wieder eingeblendet werden.
 - Angebote: Kategorienfilter. Die Kategorien kommen vom Anbieter (Modul-Feld `category` am Angebot); Module ohne Kategorien zeigen keinen Filter.
 

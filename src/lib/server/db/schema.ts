@@ -168,3 +168,18 @@ export const hiddenOffers = sqliteTable(
 	},
 	(t) => [primaryKey({ columns: [t.storeId, t.nameKey] })]
 );
+
+/** Preisverlauf der Angebote: ein Eintrag pro Händler, Produktname (siehe offers.ts#hiddenKey),
+ * Markt und Tag, damit derselbe Artikel über Prospekte hinweg vergleichbar bleibt. */
+export const offerPriceHistory = sqliteTable(
+	'offer_price_history',
+	{
+		storeId: text('store_id').notNull(),
+		nameKey: text('name_key').notNull(),
+		marketId: text('market_id').notNull(),
+		day: text('day').notNull(), // YYYY-MM-DD
+		priceCents: integer('price_cents').notNull(),
+		originalPriceCents: integer('original_price_cents')
+	},
+	(t) => [primaryKey({ columns: [t.storeId, t.nameKey, t.marketId, t.day] })]
+);
