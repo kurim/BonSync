@@ -2,13 +2,11 @@
 	import { enhance } from '$app/forms';
 	import { euro } from '#lib/stores-ui';
 	import { MATCH_KIND_LABEL } from '#lib/dealMatching';
-	import PriceHistory from '#lib/components/PriceHistory.svelte';
 
 	let { data } = $props();
 
 	const dateFmt = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit' });
 	let formEl: HTMLFormElement | undefined = $state();
-	let openKey = $state<string | null>(null);
 </script>
 
 <svelte:head><title>Deals für mich — BonSync</title></svelte:head>
@@ -49,6 +47,7 @@
 	{:else}
 		<p class="mb-space-md font-body-sm text-body-sm text-on-surface-variant">
 			<a href={data.showHidden ? '/deals' : '/deals?hidden=1'} class="underline">{data.showHidden ? 'Ausgeblendete verbergen' : 'Ausgeblendete Produkte anzeigen'}</a>
+			{#if data.watchedCount > 0}· <a href="/deals/produkt" class="underline">Überwachte Produkte ({data.watchedCount})</a>{/if}
 		</p>
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-md">
 			{#each data.deals as d (d.storeId + d.externalId)}
@@ -82,15 +81,12 @@
 							{MATCH_KIND_LABEL[d.kind]} · du kaufst: {d.items.map((i) => `${i.name} (${i.count}×)`).join(', ')}
 						</div>
 						{#if d.validTo}<div class="font-label-mono-xs text-label-mono-xs text-outline mt-1">gültig bis {dateFmt.format(d.validTo)}</div>{/if}
-						<button
-							type="button"
-							class="mt-1 font-label-mono-xs text-label-mono-xs text-primary underline"
-							aria-expanded={openKey === d.storeId + d.externalId}
-							onclick={() => (openKey = openKey === d.storeId + d.externalId ? null : d.storeId + d.externalId)}
+						<a
+							href="/deals/produkt?s={encodeURIComponent(d.storeId)}&t={encodeURIComponent(d.title)}"
+							class="mt-1 inline-block font-label-mono-xs text-label-mono-xs text-primary underline"
 						>
-							<i class="fa-solid fa-chart-line"></i> Preisverlauf
-						</button>
-						{#if openKey === d.storeId + d.externalId}<PriceHistory storeId={d.storeId} title={d.title} />{/if}
+							<i class="fa-solid fa-bell"></i> {d.watched ? 'Preis wird überwacht' : 'Preis überwachen'}
+						</a>
 					</div>
 				</div>
 			{/each}

@@ -183,3 +183,15 @@ export const offerPriceHistory = sqliteTable(
 	},
 	(t) => [primaryKey({ columns: [t.storeId, t.nameKey, t.marketId, t.day] })]
 );
+
+/** Produkte, deren Preis der Nutzer überwacht (pro Händler und Produktname, siehe offers.ts#hiddenKey). */
+export const watchedOffers = sqliteTable(
+	'watched_offers',
+	{
+		storeId: text('store_id').notNull(),
+		nameKey: text('name_key').notNull(),
+		title: text('title').notNull(), // Originaltitel, für die Anzeige
+		since: integer('since').notNull() // epoch ms
+	},
+	(t) => [primaryKey({ columns: [t.storeId, t.nameKey] })]
+);
