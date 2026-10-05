@@ -151,6 +151,13 @@ export function ensureSchema() {
 			original_price_cents INTEGER,
 			PRIMARY KEY (store_id, name_key, market_id, day)
 		);
+		CREATE TABLE IF NOT EXISTS watched_offers (
+			store_id TEXT NOT NULL,
+			name_key TEXT NOT NULL,
+			title TEXT NOT NULL,
+			since INTEGER NOT NULL,
+			PRIMARY KEY (store_id, name_key)
+		);
 		CREATE TABLE IF NOT EXISTS installed_modules (
 			id TEXT PRIMARY KEY,
 			version TEXT NOT NULL,

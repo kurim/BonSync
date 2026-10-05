@@ -1,16 +1,17 @@
 import { getStoreUi } from '#lib/stores-ui';
 import { listMetas, resolveUi } from '#lib/server/modules/registry';
-import { computeDeals, getMatchOptions, hideOffer, listSelectedMarkets, setMatchOptions, unhideOffer } from '#lib/server/offers';
+import { computeDeals, getMatchOptions, hideOffer, isWatchedKey, listSelectedMarkets, setMatchOptions, unhideOffer, watchedKeys } from '#lib/server/offers';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const showHidden = url.searchParams.get('hidden') === '1';
 	const matchOptions = await getMatchOptions();
-	const [deals, markets] = await Promise.all([computeDeals(matchOptions, undefined, showHidden), listSelectedMarkets()]);
+	const [deals, markets, watched] = await Promise.all([computeDeals(matchOptions, undefined, showHidden), listSelectedMarkets(), watchedKeys()]);
 	const storeUi = Object.fromEntries(listMetas().map((m) => [m.id, getStoreUi(m.id, m.displayName, resolveUi(m.id))]));
 	return {
 		matchOptions,
 		showHidden,
+		watchedCount: watched.size,
 		hasMarkets: markets.length > 0,
 		storeUi,
 		deals: deals.map((d) => ({
@@ -24,6 +25,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			validTo: d.offer.validTo,
 			imageUrl: d.offer.imageUrl,
 			hidden: d.offer.hidden,
+			watched: isWatchedKey(watched, d.offer.storeId, d.offer.title),
 			kind: d.kind,
 			items: d.items,
 			count: d.count

@@ -2,7 +2,7 @@ import { existsSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { and, eq, inArray, lt, or, isNull, gte, sql } from 'drizzle-orm';
 import { db } from './db';
-import { offers, selectedMarkets, receipts, receiptItems, appSettings, hiddenOffers, offerPriceHistory } from './db/schema';
+import { offers, selectedMarkets, receipts, receiptItems, appSettings, hiddenOffers, offerPriceHistory, watchedOffers } from './db/schema';
 import { getModule } from './modules/registry';
 import { loadCredentials } from './sync';
 import { betterKind, isAllowed, kindRank, matchKind, tokenize, type MatchKind, type MatchOptions } from '#lib/dealMatching';
@@ -151,6 +151,25 @@ async function recordPriceHistory(
 		console.error('Preisverlauf konnte nicht gespeichert werden:', err);
 	}
 }
+
+export async function watchOffer(storeId: StoreId, title: string) {
+	await db.insert(watchedOffers).values({ storeId, nameKey: hiddenKey(title), title: title.trim(), since: Date.now() }).onConflictDoNothing().run();
+}
+
+export async function unwatchOffer(storeId: StoreId, title: string) {
+	await db.delete(watchedOffers).where(and(eq(watchedOffers.storeId, storeId), eq(watchedOffers.nameKey, hiddenKey(title)))).run();
+}
+
+export async function listWatched() {
+	return db.select().from(watchedOffers).all();
+}
+
+/** Schlüssel `storeId|nameKey` aller überwachten Produkte, zum schnellen Abgleich mit Angeboten. */
+export async function watchedKeys(): Promise<Set<string>> {
+	return new Set((await listWatched()).map((w) => `${w.storeId}|${w.nameKey}`));
+}
+
+export const isWatchedKey = (watched: Set<string>, storeId: string, title: string) => watched.has(`${storeId}|${hiddenKey(title)}`);
 
 export interface PriceSeries {
 	marketId: string;
