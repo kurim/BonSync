@@ -142,6 +142,15 @@ export function ensureSchema() {
 			title TEXT NOT NULL,
 			PRIMARY KEY (store_id, name_key)
 		);
+		CREATE TABLE IF NOT EXISTS offer_price_history (
+			store_id TEXT NOT NULL,
+			name_key TEXT NOT NULL,
+			market_id TEXT NOT NULL,
+			day TEXT NOT NULL,
+			price_cents INTEGER NOT NULL,
+			original_price_cents INTEGER,
+			PRIMARY KEY (store_id, name_key, market_id, day)
+		);
 		CREATE TABLE IF NOT EXISTS installed_modules (
 			id TEXT PRIMARY KEY,
 			version TEXT NOT NULL,
