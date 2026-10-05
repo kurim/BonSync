@@ -2,12 +2,12 @@ import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { eq, inArray } from 'drizzle-orm';
 import { error, fail } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { storeModules, receipts, receiptItems, credentials, installedModules } from '$lib/server/db/schema';
-import { listMetas, getModule, getLoaded, resolveUi, modulesDir, unregisterModule } from '$lib/server/modules/registry';
-import { isValidModuleId } from '$lib/server/modules/manifest';
-import { loadCredentials, saveCredentials, syncStore, reprocessStore, isReprocessing, pdfDir } from '$lib/server/sync';
-import type { StoreId } from '$lib/server/modules/types';
+import { db } from '#lib/server/db';
+import { storeModules, receipts, receiptItems, credentials, installedModules } from '#lib/server/db/schema';
+import { listMetas, getModule, getLoaded, resolveUi, modulesDir, unregisterModule } from '#lib/server/modules/registry';
+import { isValidModuleId } from '#lib/server/modules/manifest';
+import { loadCredentials, saveCredentials, syncStore, reprocessStore, isReprocessing, pdfDir } from '#lib/server/sync';
+import type { StoreId } from '#lib/server/modules/types';
 import type { Actions, PageServerLoad } from './$types';
 
 /** Liest `storeId` aus dem Formular und lehnt alles ab, was nicht dem Modul-Id-Muster entspricht.

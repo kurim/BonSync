@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { euro } from '$lib/stores-ui';
+	import { euro } from '#lib/stores-ui';
 
 	let { data, form } = $props();
 

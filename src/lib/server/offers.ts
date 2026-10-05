@@ -5,7 +5,7 @@ import { db } from './db';
 import { offers, selectedMarkets, receipts, receiptItems, appSettings } from './db/schema';
 import { getModule } from './modules/registry';
 import { loadCredentials } from './sync';
-import { betterKind, isAllowed, kindRank, matchKind, tokenize, type MatchKind, type MatchOptions } from '$lib/dealMatching';
+import { betterKind, isAllowed, kindRank, matchKind, tokenize, type MatchKind, type MatchOptions } from '#lib/dealMatching';
 import type { MarketRef, StoreId } from './modules/types';
 
 /** Räumt zwischengespeicherte Angebotsbilder (siehe routes/angebote/bild) nach 30 Tagen auf. */

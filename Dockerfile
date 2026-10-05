@@ -31,6 +31,7 @@ ENV NODE_OPTIONS=--experimental-sqlite
 RUN groupadd -r bonsync && useradd -r -g bonsync bonsync
 
 COPY --from=builder /app/build ./build
+COPY server.js ./server.js
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /root/.cache/ms-playwright /home/bonsync/.cache/ms-playwright
@@ -53,4 +54,4 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 EXPOSE 3000
 ENV PORT=3000
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["node", "build/index.js"]
+CMD ["node", "server.js"]

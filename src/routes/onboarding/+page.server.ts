@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { checkPassword, setPassword, completeOnboarding, SESSION_COOKIE } from '$lib/server/auth';
-import { fetchStoreCatalog, installFromCatalogEntry } from '$lib/server/modules/storeCatalog';
+import { checkPassword, setPassword, completeOnboarding, SESSION_COOKIE } from '#lib/server/auth';
+import { fetchStoreCatalog, installFromCatalogEntry } from '#lib/server/modules/storeCatalog';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

@@ -1,11 +1,11 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 import { redirect } from '@sveltejs/kit';
-import { bootstrapSettings, isValidSession, needsOnboarding, SESSION_COOKIE } from '$lib/server/auth';
-import { ensureSchema, db } from '$lib/server/db';
-import { storeModules } from '$lib/server/db/schema';
-import { listMetas, scanAndLoadModules } from '$lib/server/modules/registry';
-import { clearStagingDir } from '$lib/server/modules/packageInstaller';
-import { startSyncScheduler } from '$lib/server/scheduler';
+import { bootstrapSettings, isValidSession, needsOnboarding, SESSION_COOKIE } from '#lib/server/auth';
+import { ensureSchema, db } from '#lib/server/db';
+import { storeModules } from '#lib/server/db/schema';
+import { listMetas, scanAndLoadModules } from '#lib/server/modules/registry';
+import { clearStagingDir } from '#lib/server/modules/packageInstaller';
+import { startSyncScheduler } from '#lib/server/scheduler';
 
 let bootstrapPromise: Promise<void> | null = null;
 function bootstrapOnce(): Promise<void> {
@@ -59,7 +59,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
 
 	// Basis-Security-Header für jede Antwort (die Content-Security-Policy selbst kommt aus
-	// svelte.config.js#kit.csp, damit SvelteKit sein Init-Skript passend mit Nonce versieht).
+	// vite.config.ts (sveltekit({ csp })), damit SvelteKit sein Init-Skript passend mit Nonce versieht).
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('Referrer-Policy', 'same-origin');

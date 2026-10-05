@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { appSettings } from '$lib/server/db/schema';
-import { checkPassword, setPassword, getSettings, SESSION_COOKIE } from '$lib/server/auth';
-import { encryptJson, decryptJson } from '$lib/server/crypto';
-import { testMqttConnection } from '$lib/server/mqtt';
+import { db } from '#lib/server/db';
+import { appSettings } from '#lib/server/db/schema';
+import { checkPassword, setPassword, getSettings, SESSION_COOKIE } from '#lib/server/auth';
+import { encryptJson, decryptJson } from '#lib/server/crypto';
+import { testMqttConnection } from '#lib/server/mqtt';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

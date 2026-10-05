@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { getStoreUi, euro, timeAgo, formatDate } from '$lib/stores-ui';
+	import { getStoreUi, euro, timeAgo, formatDate } from '#lib/stores-ui';
 	import type { Range } from './+page.server';
 
 	let { data } = $props();

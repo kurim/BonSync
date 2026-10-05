@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { extname, join, normalize, sep } from 'node:path';
 import { error } from '@sveltejs/kit';
-import { modulesDir } from '$lib/server/modules/registry';
-import { isValidModuleId } from '$lib/server/modules/manifest';
+import { modulesDir } from '#lib/server/modules/registry';
+import { isValidModuleId } from '#lib/server/modules/manifest';
 import type { RequestHandler } from './$types';
 
 /** Liefert eine Datei aus einem installierten Modul-Paket (${DATA_DIR}/modules/<id>/<file>) --

@@ -1,8 +1,8 @@
 import { desc, inArray, eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { receipts, receiptItems, storeModules, appSettings } from '$lib/server/db/schema';
-import { getStoreUi } from '$lib/stores-ui';
-import { listMetas, resolveUi } from '$lib/server/modules/registry';
+import { db } from '#lib/server/db';
+import { receipts, receiptItems, storeModules, appSettings } from '#lib/server/db/schema';
+import { getStoreUi } from '#lib/stores-ui';
+import { listMetas, resolveUi } from '#lib/server/modules/registry';
 import type { PageServerLoad } from './$types';
 
 const RANGES = ['month', '30days', 'year'] as const;

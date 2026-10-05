@@ -1,8 +1,8 @@
 import { desc, count } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { receipts, receiptItems } from '$lib/server/db/schema';
-import { getStoreUi } from '$lib/stores-ui';
-import { listMetas, resolveUi } from '$lib/server/modules/registry';
+import { db } from '#lib/server/db';
+import { receipts, receiptItems } from '#lib/server/db/schema';
+import { getStoreUi } from '#lib/stores-ui';
+import { listMetas, resolveUi } from '#lib/server/modules/registry';
 import type { PageServerLoad } from './$types';
 
 const PAGE_SIZE = 25;

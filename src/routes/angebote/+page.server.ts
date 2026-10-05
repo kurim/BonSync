@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { getStoreUi } from '$lib/stores-ui';
-import { listMetas, resolveUi } from '$lib/server/modules/registry';
-import { currentOffers, listSelectedMarkets, supportsOffers, syncAllOffers } from '$lib/server/offers';
+import { getStoreUi } from '#lib/stores-ui';
+import { listMetas, resolveUi } from '#lib/server/modules/registry';
+import { currentOffers, listSelectedMarkets, supportsOffers, syncAllOffers } from '#lib/server/offers';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

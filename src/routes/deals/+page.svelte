@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { euro } from '$lib/stores-ui';
-	import { MATCH_KIND_LABEL } from '$lib/dealMatching';
+	import { euro } from '#lib/stores-ui';
+	import { MATCH_KIND_LABEL } from '#lib/dealMatching';
 
 	let { data } = $props();
 

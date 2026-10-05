@@ -1,9 +1,9 @@
-import { db } from '$lib/server/db';
-import { receipts } from '$lib/server/db/schema';
-import { geocodeAddress, mapTileUrlTemplate } from '$lib/server/geocoding';
-import { getStoreUi } from '$lib/stores-ui';
-import { listMetas, resolveUi } from '$lib/server/modules/registry';
-import type { StoreId } from '$lib/server/modules/types';
+import { db } from '#lib/server/db';
+import { receipts } from '#lib/server/db/schema';
+import { geocodeAddress, mapTileUrlTemplate } from '#lib/server/geocoding';
+import { getStoreUi } from '#lib/stores-ui';
+import { listMetas, resolveUi } from '#lib/server/modules/registry';
+import type { StoreId } from '#lib/server/modules/types';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

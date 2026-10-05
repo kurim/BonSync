@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
 import { error, fail } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { receipts, receiptItems } from '$lib/server/db/schema';
-import { loadCredentials, fetchAndStorePdfAndItems } from '$lib/server/sync';
-import { getModule, getLoaded, resolveUi } from '$lib/server/modules/registry';
-import type { StoreId, StoredCredentials } from '$lib/server/modules/types';
+import { db } from '#lib/server/db';
+import { receipts, receiptItems } from '#lib/server/db/schema';
+import { loadCredentials, fetchAndStorePdfAndItems } from '#lib/server/sync';
+import { getModule, getLoaded, resolveUi } from '#lib/server/modules/registry';
+import type { StoreId, StoredCredentials } from '#lib/server/modules/types';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {

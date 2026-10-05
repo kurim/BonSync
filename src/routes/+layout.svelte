@@ -1,9 +1,9 @@
 <script lang="ts">
 	import '../app.css';
 	import { page, navigating, updated } from '$app/state';
-	import { browser } from '$app/environment';
-	import { navItems, isActive } from '$lib/nav';
-	import BottomNav from '$lib/components/BottomNav.svelte';
+	import { browser } from '$app/env';
+	import { navItems, isActive } from '#lib/nav';
+	import BottomNav from '#lib/components/BottomNav.svelte';
 
 	let { data, children } = $props();
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { getStoreUi, euro } from '$lib/stores-ui';
-	import type { ReceiptMeta } from '$lib/server/modules/types';
+	import { getStoreUi, euro } from '#lib/stores-ui';
+	import type { ReceiptMeta } from '#lib/server/modules/types';
 
 	let { data, form } = $props();
 

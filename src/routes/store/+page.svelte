@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { timeAgo } from '$lib/stores-ui';
+	import { timeAgo } from '#lib/stores-ui';
 
 	let { data, form } = $props();
 

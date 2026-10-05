@@ -3,9 +3,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { error } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { offers } from '$lib/server/db/schema';
-import { rawRequest } from '$lib/server/http';
+import { db } from '#lib/server/db';
+import { offers } from '#lib/server/db/schema';
+import { rawRequest } from '#lib/server/http';
 import type { RequestHandler } from './$types';
 
 // Produktbilder der Angebote werden über den eigenen Server geladen und zwischengespeichert: Die
