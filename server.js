@@ -1,3 +1,4 @@
+// @ts-nocheck -- reines Node-Startskript; ./build/index.js existiert erst nach `npm run build`.
 // Startpunkt für den Produktionsbetrieb (`npm start`, Docker).
 //
 // adapter-node 6 liest die Umgebungsvariable ORIGIN nicht mehr; die Origin wird pro Request aus
