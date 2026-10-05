@@ -59,7 +59,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
 
 	// Basis-Security-Header für jede Antwort (die Content-Security-Policy selbst kommt aus
-	// svelte.config.js#kit.csp, damit SvelteKit sein Init-Skript passend mit Nonce versieht).
+	// vite.config.ts (sveltekit({ csp })), damit SvelteKit sein Init-Skript passend mit Nonce versieht).
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('Referrer-Policy', 'same-origin');
