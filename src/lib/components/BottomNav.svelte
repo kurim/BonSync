@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { navItems, isActive } from '$lib/nav';
+	import { navItems, isActive } from '#lib/nav';
 
 	let { appVersion }: { appVersion: string } = $props();
 

@@ -4,11 +4,14 @@
   "private": true,
   "license": "MIT",
   "type": "module",
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node build/index.js",
+    "start": "node server.js",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "db:generate": "drizzle-kit generate"
   },
@@ -43,7 +46,6 @@
     "yauzl": "^3.2.0"
   },
   "overrides": {
-    "cookie": "^0.7.0",
     "esbuild": "^0.28.2"
   },
   "allowScripts": {

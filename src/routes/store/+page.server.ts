@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fail } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { storeModules } from '$lib/server/db/schema';
-import { getMeta, getLoaded } from '$lib/server/modules/registry';
-import { stageZip, commitStagedInstall, isValidStagingDir } from '$lib/server/modules/packageInstaller';
-import { parseManifest } from '$lib/server/modules/manifest';
-import { fetchStoreCatalog, installFromCatalogEntry } from '$lib/server/modules/storeCatalog';
+import { db } from '#lib/server/db';
+import { storeModules } from '#lib/server/db/schema';
+import { getMeta, getLoaded } from '#lib/server/modules/registry';
+import { stageZip, commitStagedInstall, isValidStagingDir } from '#lib/server/modules/packageInstaller';
+import { parseManifest } from '#lib/server/modules/manifest';
+import { fetchStoreCatalog, installFromCatalogEntry } from '#lib/server/modules/storeCatalog';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { getStoreUi, timeAgo, euro } from '$lib/stores-ui';
-	import ConfirmUninstallDialog from '$lib/components/ConfirmUninstallDialog.svelte';
+	import { getStoreUi, timeAgo, euro } from '#lib/stores-ui';
+	import ConfirmUninstallDialog from '#lib/components/ConfirmUninstallDialog.svelte';
 
 	let { data, form } = $props();
 

@@ -1,11 +1,11 @@
 import { eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { existsSync, readFileSync } from 'node:fs';
-import { db } from '$lib/server/db';
-import { receipts } from '$lib/server/db/schema';
-import { loadCredentials, fetchAndStorePdfAndItems, pdfPath } from '$lib/server/sync';
-import { getModule } from '$lib/server/modules/registry';
-import type { StoreId } from '$lib/server/modules/types';
+import { db } from '#lib/server/db';
+import { receipts } from '#lib/server/db/schema';
+import { loadCredentials, fetchAndStorePdfAndItems, pdfPath } from '#lib/server/sync';
+import { getModule } from '#lib/server/modules/registry';
+import type { StoreId } from '#lib/server/modules/types';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params }) => {

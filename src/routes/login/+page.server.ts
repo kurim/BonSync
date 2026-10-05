@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { checkPassword, createSession, SESSION_COOKIE } from '$lib/server/auth';
-import { clearLoginFailures, loginBlockedMs, recordLoginFailure } from '$lib/server/rateLimit';
+import { checkPassword, createSession, SESSION_COOKIE } from '#lib/server/auth';
+import { clearLoginFailures, loginBlockedMs, recordLoginFailure } from '#lib/server/rateLimit';
 import type { Actions } from './$types';
 
 function clientIp(getClientAddress: () => string): string {

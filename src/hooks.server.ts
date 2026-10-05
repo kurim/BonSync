@@ -1,11 +1,11 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 import { redirect } from '@sveltejs/kit';
-import { bootstrapSettings, isValidSession, needsOnboarding, SESSION_COOKIE } from '$lib/server/auth';
-import { ensureSchema, db } from '$lib/server/db';
-import { storeModules } from '$lib/server/db/schema';
-import { listMetas, scanAndLoadModules } from '$lib/server/modules/registry';
-import { clearStagingDir } from '$lib/server/modules/packageInstaller';
-import { startSyncScheduler } from '$lib/server/scheduler';
+import { bootstrapSettings, isValidSession, needsOnboarding, SESSION_COOKIE } from '#lib/server/auth';
+import { ensureSchema, db } from '#lib/server/db';
+import { storeModules } from '#lib/server/db/schema';
+import { listMetas, scanAndLoadModules } from '#lib/server/modules/registry';
+import { clearStagingDir } from '#lib/server/modules/packageInstaller';
+import { startSyncScheduler } from '#lib/server/scheduler';
 
 let bootstrapPromise: Promise<void> | null = null;
 function bootstrapOnce(): Promise<void> {

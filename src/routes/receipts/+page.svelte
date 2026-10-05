@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getStoreUi, euro } from '$lib/stores-ui';
+	import { getStoreUi, euro } from '#lib/stores-ui';
 
 	let { data } = $props();
 
@@ -24,7 +24,7 @@
 		// Seitenwechsel/Filter/Suche setzen die Paginierung zurück, außer es wird explizit die
 		// Seite selbst geändert (sonst würde man z.B. bei einer neuen Suche auf Seite 5 landen).
 		if (!('page' in params)) url.searchParams.delete('page');
-		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
+		goto(url.pathname + url.search, { reset: false });
 	}
 
 	let searchTimer: ReturnType<typeof setTimeout>;

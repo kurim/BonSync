@@ -1,6 +1,6 @@
-import { getStoreUi } from '$lib/stores-ui';
-import { listMetas, resolveUi } from '$lib/server/modules/registry';
-import { computeDeals, getMatchOptions, listSelectedMarkets, setMatchOptions } from '$lib/server/offers';
+import { getStoreUi } from '#lib/stores-ui';
+import { listMetas, resolveUi } from '#lib/server/modules/registry';
+import { computeDeals, getMatchOptions, listSelectedMarkets, setMatchOptions } from '#lib/server/offers';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

@@ -1,8 +1,8 @@
-import { db } from '$lib/server/db';
-import { receipts, receiptItems } from '$lib/server/db/schema';
-import { getStoreUi } from '$lib/stores-ui';
-import { listMetas, resolveUi } from '$lib/server/modules/registry';
-import type { StoreId } from '$lib/server/modules/types';
+import { db } from '#lib/server/db';
+import { receipts, receiptItems } from '#lib/server/db/schema';
+import { getStoreUi } from '#lib/stores-ui';
+import { listMetas, resolveUi } from '#lib/server/modules/registry';
+import type { StoreId } from '#lib/server/modules/types';
 import type { PageServerLoad } from './$types';
 
 /** Grobe, real existierende Handelsform je Kette (keine Nutzerdaten -- allgemein bekannte

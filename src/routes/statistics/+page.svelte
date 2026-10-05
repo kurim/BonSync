@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { euro } from '$lib/stores-ui';
+	import { euro } from '#lib/stores-ui';
 	import type { Period } from './+page.server';
 
 	let { data } = $props();

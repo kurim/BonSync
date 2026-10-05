@@ -1,10 +1,10 @@
 import { fail } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { receipts } from '$lib/server/db/schema';
-import { getStoreUi } from '$lib/stores-ui';
-import { listMetas, resolveUi } from '$lib/server/modules/registry';
-import { addSelectedMarket, listSelectedMarkets, removeSelectedMarket, resolveFiliale, searchMarketsFor, supportsOffers, syncOffers } from '$lib/server/offers';
+import { db } from '#lib/server/db';
+import { receipts } from '#lib/server/db/schema';
+import { getStoreUi } from '#lib/stores-ui';
+import { listMetas, resolveUi } from '#lib/server/modules/registry';
+import { addSelectedMarket, listSelectedMarkets, removeSelectedMarket, resolveFiliale, searchMarketsFor, supportsOffers, syncOffers } from '#lib/server/offers';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

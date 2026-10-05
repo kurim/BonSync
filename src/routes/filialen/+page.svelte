@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { getStoreUi } from '$lib/stores-ui';
+	import { getStoreUi } from '#lib/stores-ui';
 
 	let { data } = $props();
 
