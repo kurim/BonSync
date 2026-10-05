@@ -10,6 +10,11 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+### Added
+
+- Angebote / Deals für mich: einzelne Produkte lassen sich dauerhaft ausblenden; über „Ausgeblendete anzeigen“ erscheinen sie abgeblendet und können wieder eingeblendet werden.
+- Angebote: Kategorienfilter. Die Kategorien kommen vom Anbieter (Modul-Feld `category` am Angebot); Module ohne Kategorien zeigen keinen Filter.
+
 ### Fixed
 
 - Angebote / Deals für mich: inhaltsgleiche Angebote erscheinen nicht mehr doppelt (REWE führt ein Produkt teils in mehreren Kategorien auf).

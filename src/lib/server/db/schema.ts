@@ -136,6 +136,7 @@ export const offers = sqliteTable(
 		validFrom: integer('valid_from'),
 		validTo: integer('valid_to'),
 		imageUrl: text('image_url'),
+		category: text('category'),
 		fetchedAt: integer('fetched_at').notNull()
 	},
 	(t) => [primaryKey({ columns: [t.storeId, t.marketId, t.externalId] })]
@@ -155,3 +156,15 @@ export const sessions = sqliteTable('sessions', {
 	createdAt: integer('created_at').notNull(),
 	expiresAt: integer('expires_at').notNull()
 });
+
+/** Vom Nutzer ausgeblendete Angebots-Produkte: pro Händler und Produktname (nicht pro Angebots-ID,
+ * die sich wöchentlich ändert), siehe offers.ts#hiddenKey. */
+export const hiddenOffers = sqliteTable(
+	'hidden_offers',
+	{
+		storeId: text('store_id').notNull(),
+		nameKey: text('name_key').notNull(),
+		title: text('title').notNull() // Originaltitel, nur für die Anzeige
+	},
+	(t) => [primaryKey({ columns: [t.storeId, t.nameKey] })]
+);

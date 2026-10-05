@@ -2,7 +2,7 @@ import { existsSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { and, eq, inArray, lt, or, isNull, gte } from 'drizzle-orm';
 import { db } from './db';
-import { offers, selectedMarkets, receipts, receiptItems, appSettings } from './db/schema';
+import { offers, selectedMarkets, receipts, receiptItems, appSettings, hiddenOffers } from './db/schema';
 import { getModule } from './modules/registry';
 import { loadCredentials } from './sync';
 import { betterKind, isAllowed, kindRank, matchKind, tokenize, type MatchKind, type MatchOptions } from '#lib/dealMatching';
@@ -102,6 +102,7 @@ export async function syncOffers(storeId: StoreId): Promise<OfferSyncResult> {
 				validFrom: o.validFrom ?? null,
 				validTo: o.validTo ?? null,
 				imageUrl: o.imageUrl ?? null,
+				category: o.category ?? null,
 				fetchedAt: now
 			}));
 		});
@@ -124,9 +125,25 @@ export async function syncAllOffers(): Promise<OfferSyncResult[]> {
 	return results;
 }
 
+/** Schlüssel eines ausgeblendeten Produkts: Händler + Produktname (Groß-/Kleinschreibung und
+ * Leerraum egal). Bewusst nicht die Angebots-ID, die sich mit jedem Prospekt ändert. */
+function hiddenKey(title: string): string {
+	return title.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+export async function hideOffer(storeId: string, title: string) {
+	if (!title.trim()) return;
+	await db.insert(hiddenOffers).values({ storeId, nameKey: hiddenKey(title), title: title.trim() }).onConflictDoNothing().run();
+}
+
+export async function unhideOffer(storeId: string, title: string) {
+	await db.delete(hiddenOffers).where(and(eq(hiddenOffers.storeId, storeId), eq(hiddenOffers.nameKey, hiddenKey(title)))).run();
+}
+
 /** Aktuell gültige Angebote der gewählten Märkte; abgelaufene werden verworfen. Ein Angebot mit
- * marketId '' (händlerweit) zählt, sobald für den Händler ein Markt gewählt ist. */
-export async function currentOffers() {
+ * marketId '' (händlerweit) zählt, sobald für den Händler ein Markt gewählt ist. Ausgeblendete
+ * Produkte fehlen, außer mit `includeHidden` (dann mit `hidden: true` markiert). */
+export async function currentOffers(options: { includeHidden?: boolean } = {}) {
 	const selected = await listSelectedMarkets();
 	if (selected.length === 0) return [];
 	const now = Date.now();
@@ -134,18 +151,23 @@ export async function currentOffers() {
 	const rows = await db.select().from(offers).where(or(isNull(offers.validTo), gte(offers.validTo, now))).all();
 	const key = new Set(selected.map((m) => `${m.storeId}|${m.marketId}`));
 	const stores = new Set(selected.map((m) => m.storeId));
+	const hidden = new Set((await db.select().from(hiddenOffers).all()).map((h) => `${h.storeId}|${h.nameKey}`));
 	const visible = rows.filter((o) => (o.marketId === '' ? stores.has(o.storeId) : key.has(`${o.storeId}|${o.marketId}`)));
-	// Dasselbe Angebot nur einmal zeigen, aber alle Märkte merken: gleiche externalId in mehreren
-	// gewählten Märkten, und inhaltsgleiche Angebote mit unterschiedlicher ID (REWE führt ein
-	// Produkt teils in mehreren Kategorien auf).
-	const merged = new Map<string, (typeof rows)[number] & { marketIds: string[] }>();
+	// Dasselbe Angebot nur einmal zeigen, aber alle Märkte und Kategorien merken: gleiche
+	// externalId in mehreren gewählten Märkten, und inhaltsgleiche Angebote mit unterschiedlicher ID
+	// (REWE führt ein Produkt teils in mehreren Kategorien auf).
+	const merged = new Map<string, (typeof rows)[number] & { marketIds: string[]; categories: string[]; hidden: boolean }>();
 	for (const o of visible) {
 		const k = [o.storeId, o.title, o.unitPriceText ?? '', o.priceCents, o.validFrom ?? '', o.validTo ?? ''].join('|');
 		const e = merged.get(k);
-		if (e) e.marketIds.push(o.marketId);
-		else merged.set(k, { ...o, marketIds: [o.marketId] });
+		if (e) {
+			e.marketIds.push(o.marketId);
+			if (o.category && !e.categories.includes(o.category)) e.categories.push(o.category);
+		} else {
+			merged.set(k, { ...o, marketIds: [o.marketId], categories: o.category ? [o.category] : [], hidden: hidden.has(`${o.storeId}|${hiddenKey(o.title)}`) });
+		}
 	}
-	return [...merged.values()];
+	return [...merged.values()].filter((o) => options.includeHidden || !o.hidden);
 }
 
 export async function getMatchOptions(): Promise<MatchOptions> {
@@ -168,8 +190,12 @@ export interface Deal {
 
 /** Gekaufte Artikel (nicht stornierte Belege, optional seit `sinceMs`) zu Namen mit Stückzahl
  * zusammenfassen und mit den aktuellen Angeboten abgleichen. */
-export async function computeDeals(options: MatchOptions, sinceMs: number | null = Date.now() - 365 * 24 * 3600_000): Promise<Deal[]> {
-	const current = await currentOffers();
+export async function computeDeals(
+	options: MatchOptions,
+	sinceMs: number | null = Date.now() - 365 * 24 * 3600_000,
+	includeHidden = false
+): Promise<Deal[]> {
+	const current = await currentOffers({ includeHidden });
 	if (current.length === 0) return [];
 
 	const rcpts = await db.select({ id: receipts.id, ts: receipts.timestamp }).from(receipts).where(eq(receipts.cancelled, false)).all();

@@ -177,7 +177,7 @@ fetchOffers(creds: object | null, markets: MarketRef[]): Promise<Offer[]>;
   wird unverändert an `fetchOffers` zurückgegeben. `street`/`zipCode` sollten gesetzt sein, damit
   Filialen aus Belegen automatisch zugeordnet werden können.
 - `Offer`: `{ externalId, title, brand?, priceCents, originalPriceCents?, unitPriceText?, validFrom?,
-  validTo?, imageUrl?, marketIds? }`. `priceCents` ist immer Cent als Integer, Zeitstempel sind
+  validTo?, imageUrl?, category?, marketIds? }`. `priceCents` ist immer Cent als Integer, Zeitstempel sind
   epoch ms. `marketIds` weglassen (oder leer), wenn das Angebot für alle abgefragten Märkte gilt.
 - `creds` ist `null`, wenn der Händler nicht verbunden ist -- ein anonymer Abruf darf trotzdem liefern.
 - `fetchOffers` liefert den **kompletten** aktuellen Stand; BonSync ersetzt damit die zuvor

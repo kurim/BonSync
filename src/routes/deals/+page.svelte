@@ -45,16 +45,30 @@
 			Aktuell passt kein Angebot zu deinen Einkäufen. Eine großzügigere Stufe oben zeigt mehr Treffer.
 		</p>
 	{:else}
+		<p class="mb-space-md font-body-sm text-body-sm text-on-surface-variant">
+			<a href={data.showHidden ? '/deals' : '/deals?hidden=1'} class="underline">{data.showHidden ? 'Ausgeblendete verbergen' : 'Ausgeblendete Produkte anzeigen'}</a>
+		</p>
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-md">
 			{#each data.deals as d (d.storeId + d.externalId)}
 				{@const ui = data.storeUi[d.storeId]}
-				<div class="rounded-xl bg-surface-container p-space-md shadow-md flex gap-space-md">
+				<div class="rounded-xl bg-surface-container p-space-md shadow-md flex gap-space-md {d.hidden ? 'opacity-50' : ''}">
 					{#if d.imageUrl}<img src="/angebote/bild?s={encodeURIComponent(d.storeId)}&id={encodeURIComponent(d.externalId)}" alt="" class="w-16 h-16 object-contain rounded bg-white shrink-0" loading="lazy" onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} />{/if}
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center gap-1.5 mb-1">
 							<span class="w-2 h-2 rounded-full shrink-0" style="background:{ui?.color}"></span>
 							<span class="font-label-mono-xs text-label-mono-xs text-on-surface-variant">{ui?.name ?? d.storeId}</span>
 							<span class="ml-auto font-label-mono-xs text-label-mono-xs px-1.5 py-0.5 rounded bg-primary/20 text-primary">{d.count}× gekauft</span>
+							<form method="POST" action={d.hidden ? '?/unhide' : '?/hide'} use:enhance>
+								<input type="hidden" name="storeId" value={d.storeId} />
+								<input type="hidden" name="title" value={d.title} />
+								<button
+									class="px-1.5 py-0.5 rounded text-outline hover:text-on-surface"
+									title={d.hidden ? 'Wieder einblenden' : 'Dieses Produkt ausblenden'}
+									aria-label={d.hidden ? 'Wieder einblenden' : 'Dieses Produkt ausblenden'}
+								>
+									<i class="fa-solid {d.hidden ? 'fa-eye' : 'fa-eye-slash'}"></i>
+								</button>
+							</form>
 						</div>
 						<div class="font-body-md text-body-md font-medium">{d.title}</div>
 						<div class="flex flex-wrap items-baseline gap-x-2 mt-1">

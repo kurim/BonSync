@@ -84,6 +84,8 @@ export interface Offer {
 	validFrom?: number; // epoch ms
 	validTo?: number; // epoch ms
 	imageUrl?: string;
+	/** Kategorie laut Händler (z.B. "Getränke"), für den Kategorienfilter bei „Angebote“. */
+	category?: string;
 	/** Märkte, für die das Angebot gilt (MarketRef.id). Leer/fehlend = alle abgefragten Märkte. */
 	marketIds?: string[];
 }

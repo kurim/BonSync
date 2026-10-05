@@ -136,6 +136,12 @@ export function ensureSchema() {
 			fetched_at INTEGER NOT NULL,
 			PRIMARY KEY (store_id, market_id, external_id)
 		);
+		CREATE TABLE IF NOT EXISTS hidden_offers (
+			store_id TEXT NOT NULL,
+			name_key TEXT NOT NULL,
+			title TEXT NOT NULL,
+			PRIMARY KEY (store_id, name_key)
+		);
 		CREATE TABLE IF NOT EXISTS installed_modules (
 			id TEXT PRIMARY KEY,
 			version TEXT NOT NULL,
@@ -152,6 +158,7 @@ export function ensureSchema() {
 	// vorhandener Spalte ignorieren.
 	for (const ddl of [
 		'ALTER TABLE receipts ADD COLUMN savings_cents INTEGER',
+		'ALTER TABLE offers ADD COLUMN category TEXT',
 		'ALTER TABLE receipts ADD COLUMN coupons_json TEXT',
 		'ALTER TABLE receipts ADD COLUMN meta_json TEXT',
 		'ALTER TABLE app_settings ADD COLUMN sync_interval_minutes INTEGER NOT NULL DEFAULT 60',
