@@ -59,6 +59,18 @@ seinem Manifest angibt — die Karte auf **Händler-Schnittstellen** passt sich 
 Modul-spezifische Eigenheiten (z.B. welche Marktdaten ein Händler liefert oder ob überhaupt ein
 PDF verfügbar ist) sind in der Doku des jeweiligen Moduls im BonSync-Store beschrieben, nicht hier.
 
+## Belege per Kamera hinzufügen
+
+Auf **Kassenzettel** → „Beleg fotografieren“ lässt sich ein Bon abfotografieren (am Handy öffnet das
+die Kamera) oder aus der Galerie wählen. Die Texterkennung läuft lokal auf dem Server über
+[Tesseract](https://github.com/tesseract-ocr/tesseract) — kein Cloud-Dienst, kein Schlüssel. Markt,
+Datum, Summe und Artikel erscheinen vor dem Speichern zur Kontrolle und Korrektur. Im Docker-Image ist
+Tesseract enthalten; bei Betrieb ohne Docker `tesseract-ocr` und `tesseract-ocr-deu` installieren
+(und bei `npm start` `BODY_SIZE_LIMIT=12M` setzen, sonst lehnt adapter-node Fotos über 512 KB ab).
+Der Händler wird aus dem Kopf des Bons erkannt und dem passenden Modul zugeordnet, sofern es
+installiert ist; sonst landet der Beleg unter „Sonstige“ (im Formular änderbar). Artikel/PDF werden
+für solche Belege nicht nachgeladen.
+
 ## Docker
 
 Fertige Images liegen in der GitHub Container Registry

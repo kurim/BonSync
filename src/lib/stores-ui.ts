@@ -5,6 +5,15 @@ export interface StoreUi {
 	logo: string | null;
 }
 
+/** Pseudo-Händler für Belege, die per Kamera/Hand erfasst wurden (kein Modul dahinter). */
+export const MANUAL_STORE_ID = 'manual';
+
+/** Selbst erfasster Beleg (Kamera/Hand): entweder beim Sammelposten 'manual' oder, wenn der Händler
+ * erkannt wurde, bei dessen Modul -- dann am externalId-Präfix erkennbar. */
+export function isManualReceipt(r: { storeId: string; externalId: string }): boolean {
+	return r.storeId === MANUAL_STORE_ID || r.externalId.startsWith('manual-');
+}
+
 // Feste, dezente Farbpalette für Module ohne eigene Manifest-Farbe -- deterministisch aus der
 // id abgeleitet (dieselbe id ergibt immer dieselbe Farbe), statt bei jedem Rendern zufällig.
 const FALLBACK_PALETTE = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#14b8a6', '#ec4899'];
@@ -25,6 +34,7 @@ function hashString(s: string): number {
  * einem Absturz (undefined.color etc.) zu führen -- z.B. für Belege eines bereits
  * deinstallierten Moduls. */
 export function getStoreUi(id: string, displayName?: string, override?: Partial<StoreUi> | null): StoreUi {
+	if (id === MANUAL_STORE_ID) return { name: 'Sonstige', color: '#64748b', chip: 'MA', logo: null };
 	const name = override?.name ?? displayName ?? id.toUpperCase();
 	return {
 		name,

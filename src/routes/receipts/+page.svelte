@@ -63,6 +63,13 @@
 			</p>
 		</div>
 		<div class="flex flex-wrap items-center gap-space-sm">
+			<a
+				class="flex items-center gap-space-xs px-space-md h-10 rounded-xl bg-primary text-on-primary-container font-label-mono-md text-label-mono-md font-semibold hover:brightness-110 transition-all shadow-sm"
+				href="/receipts/neu"
+			>
+				<i class="fa-solid fa-camera text-[16px]"></i>
+				Beleg fotografieren
+			</a>
 			<div class="flex items-center gap-space-sm px-space-md py-space-xs rounded-xl bg-surface-container shadow-sm">
 				<div class="w-8 h-8 rounded-lg bg-secondary-container/50 flex items-center justify-center text-secondary">
 					<i class="fa-solid fa-wallet text-[18px]"></i>
