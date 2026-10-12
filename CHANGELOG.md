@@ -10,6 +10,10 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+### Added
+
+- Kassenzettel: „Beleg fotografieren“ auf der Kassenzettel-Seite. Foto mit der Kamera aufnehmen oder aus der Galerie wählen, der Text wird lokal auf dem Server per Tesseract erkannt (kein Cloud-Dienst, kein Schlüssel). Markt, Datum, Summe und Artikel werden vor dem Speichern zur Kontrolle und Korrektur angezeigt. Die Belege erscheinen unter „Manuell“. Das Docker-Image enthält dafür `tesseract-ocr` mit deutschen Sprachdaten; ohne Docker muss Tesseract (Sprache `deu`) selbst installiert sein.
+
 ## [0.3.0] - 2026-10-05
 
 ### Added

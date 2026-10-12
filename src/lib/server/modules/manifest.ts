@@ -1,5 +1,6 @@
 import { parse as parseYamlDocument } from 'yaml';
 import type { LoginStrategy } from './types';
+import { MANUAL_STORE_ID } from '#lib/stores-ui';
 
 /** Version des ModuleSdk-Vertrags, den diese App-Version implementiert (siehe sdk.ts) --
  * ein Modul, dessen manifest.yaml eine höhere sdkVersion verlangt, wird abgelehnt statt mit
@@ -13,7 +14,8 @@ export const CURRENT_SDK_VERSION = 1;
 export const ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,31}$/;
 
 export function isValidModuleId(id: unknown): id is string {
-	return typeof id === 'string' && ID_PATTERN.test(id);
+	// 'manual' ist für per Kamera erfasste Belege reserviert (siehe stores-ui.ts#MANUAL_STORE_ID).
+	return typeof id === 'string' && ID_PATTERN.test(id) && id !== MANUAL_STORE_ID;
 }
 const LOGIN_STRATEGY_KINDS = ['oauth-pkce-manual', 'oauth-pkce-redirect', 'credentials'];
 
@@ -56,7 +58,7 @@ export function parseManifest(yamlText: string): ModuleManifest {
 	if (m.manifestVersion !== 1) {
 		throw new Error('manifest.yaml: "manifestVersion" muss 1 sein.');
 	}
-	if (typeof m.id !== 'string' || !ID_PATTERN.test(m.id)) {
+	if (typeof m.id !== 'string' || !ID_PATTERN.test(m.id) || m.id === MANUAL_STORE_ID) {
 		throw new Error(
 			'manifest.yaml: "id" fehlt oder ungültig (erlaubt: Kleinbuchstaben, Ziffern, "-", 2-32 Zeichen, beginnt mit Buchstabe/Ziffer).'
 		);

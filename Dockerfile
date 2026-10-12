@@ -42,7 +42,8 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/home/bonsync/.cache/ms-playwright
 # `install-deps` installiert nur die OS-Pakete via apt, lädt keinen Browser erneut herunter.
 RUN apt-get update \
 	&& npx playwright install-deps chromium \
-	&& apt-get install -y --no-install-recommends gosu \
+	# tesseract-ocr(-deu): lokale Texterkennung für fotografierte Kassenzettel (src/lib/server/ocr.ts)
+	&& apt-get install -y --no-install-recommends gosu tesseract-ocr tesseract-ocr-deu \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& chown -R bonsync:bonsync /home/bonsync/.cache
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -53,5 +54,8 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # unprivilegierten User wechselt (siehe docker-entrypoint.sh).
 EXPOSE 3000
 ENV PORT=3000
+# Fotos von Kassenzetteln (Upload unter /receipts/neu) sind größer als das adapter-node-Standardlimit
+# von 512 KB; der Server begrenzt selbst auf 10 MB pro Foto.
+ENV BODY_SIZE_LIMIT=12M
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "server.js"]

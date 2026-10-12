@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { getStoreUi, euro } from '#lib/stores-ui';
+	import { getStoreUi, euro, MANUAL_STORE_ID } from '#lib/stores-ui';
 	import type { ReceiptMeta } from '#lib/server/modules/types';
 
 	let { data, form } = $props();
@@ -75,26 +75,28 @@
 					Original eBon (PDF)
 				</a>
 			{/if}
-			<form
-				method="POST"
-				action="?/reprocess"
-				use:enhance={() => {
-					reprocessing = true;
-					return async ({ update }) => {
-						reprocessing = false;
-						await update();
-					};
-				}}
-			>
-				<button
-					class="flex items-center gap-space-xs px-space-md h-9 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-body-sm font-medium transition-all shadow-sm disabled:opacity-50"
-					type="submit"
-					disabled={reprocessing}
+			{#if data.receipt.storeId !== MANUAL_STORE_ID}
+				<form
+					method="POST"
+					action="?/reprocess"
+					use:enhance={() => {
+						reprocessing = true;
+						return async ({ update }) => {
+							reprocessing = false;
+							await update();
+						};
+					}}
 				>
-					<i class="fa-solid fa-arrows-rotate text-[16px]"></i>
-					{reprocessing ? 'Lese neu ein…' : 'Neu einlesen'}
-				</button>
-			</form>
+					<button
+						class="flex items-center gap-space-xs px-space-md h-9 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-body-sm font-medium transition-all shadow-sm disabled:opacity-50"
+						type="submit"
+						disabled={reprocessing}
+					>
+						<i class="fa-solid fa-arrows-rotate text-[16px]"></i>
+						{reprocessing ? 'Lese neu ein…' : 'Neu einlesen'}
+					</button>
+				</form>
+			{/if}
 			<a
 				class="flex items-center gap-space-xs px-space-md h-9 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-body-sm font-medium transition-all shadow-sm"
 				href="/receipts"
