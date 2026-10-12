@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { getStoreUi, euro, MANUAL_STORE_ID } from '#lib/stores-ui';
+	import { getStoreUi, euro, isManualReceipt } from '#lib/stores-ui';
 	import type { ReceiptMeta } from '#lib/server/modules/types';
 
 	let { data, form } = $props();
@@ -75,7 +75,7 @@
 					Original eBon (PDF)
 				</a>
 			{/if}
-			{#if data.receipt.storeId !== MANUAL_STORE_ID}
+			{#if !isManualReceipt(data.receipt)}
 				<form
 					method="POST"
 					action="?/reprocess"

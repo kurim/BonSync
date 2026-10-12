@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	let { form } = $props();
+	let { data, form } = $props();
 
 	interface Row {
 		name: string;
@@ -18,7 +18,11 @@
 
 	// Bearbeitbarer Stand des Belegs: kommt entweder aus der Texterkennung (form.draft) oder, nach
 	// einem Validierungsfehler beim Speichern, aus dem zurückgegebenen Formularstand (form.form).
+	let storeId = $state('manual');
 	let marketName = $state('');
+	let marketStreet = $state('');
+	let marketZip = $state('');
+	let marketCity = $state('');
 	let date = $state('');
 	let time = $state('');
 	let total = $state('');
@@ -30,7 +34,11 @@
 		if (form && 'draft' in form && form.draft) {
 			const d = form.draft;
 			const ts = new Date(d.timestamp);
+			storeId = d.storeId;
 			marketName = d.marketName;
+			marketStreet = d.marketStreet;
+			marketZip = d.marketZip;
+			marketCity = d.marketCity;
 			date = `${ts.getFullYear()}-${pad(ts.getMonth() + 1)}-${pad(ts.getDate())}`;
 			time = `${pad(ts.getHours())}:${pad(ts.getMinutes())}`;
 			total = d.totalCents === null ? '' : fmt(d.totalCents);
@@ -38,7 +46,11 @@
 			rawText = d.rawText;
 			hasDraft = true;
 		} else if (form && 'form' in form && form.form) {
+			storeId = form.form.storeId;
 			marketName = form.form.marketName;
+			marketStreet = form.form.marketStreet;
+			marketZip = form.form.marketZip;
+			marketCity = form.form.marketCity;
 			date = form.form.date;
 			time = form.form.time;
 			total = form.form.total;
@@ -56,6 +68,11 @@
 		}, 0)
 	);
 
+	const totalCents = $derived.by(() => {
+		const m = total.trim().match(/^(\d{1,5})[.,](\d{2})$/);
+		return m ? parseInt(m[1], 10) * 100 + parseInt(m[2], 10) : null;
+	});
+
 	function onPick(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
 		if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -63,16 +80,63 @@
 		if (file) (e.target as HTMLInputElement).form?.requestSubmit();
 	}
 
-	/** Verkleinert das Foto vor dem Upload: Handy-Kameras liefern oft 10+ MB, für die Texterkennung
-	 * reichen ca. 2000 px Kantenlänge, und der Upload bleibt schnell und unter dem Serverlimit. */
+	/** Sucht im Foto den hellen Bon-Streifen (Thermopapier vor dunklerem Untergrund) und gibt dessen
+	 * Ausschnitt zurück. Ein unruhiger Hintergrund verschlechtert die Texterkennung deutlich; ohne
+	 * eindeutigen Streifen (oder wenn er fast das ganze Bild füllt) bleibt das Bild unbeschnitten. */
+	function findReceiptBox(bmp: ImageBitmap): { x: number; y: number; w: number; h: number } | null {
+		const W = 160;
+		const H = Math.max(1, Math.round((bmp.height / bmp.width) * W));
+		const c = document.createElement('canvas');
+		c.width = W;
+		c.height = H;
+		const ctx = c.getContext('2d', { willReadFrequently: true })!;
+		ctx.drawImage(bmp, 0, 0, W, H);
+		const px = ctx.getImageData(0, 0, W, H).data;
+		const lum = new Float32Array(W * H);
+		for (let i = 0; i < lum.length; i++) lum[i] = 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
+		const sorted = Float32Array.from(lum).sort();
+		const thr = sorted[Math.floor(sorted.length * 0.95)] * 0.75;
+		const cols = new Array<number>(W).fill(0);
+		const rows = new Array<number>(H).fill(0);
+		for (let y = 0; y < H; y++) {
+			for (let x = 0; x < W; x++) {
+				if (lum[y * W + x] > thr) {
+					cols[x]++;
+					rows[y]++;
+				}
+			}
+		}
+		const span = (counts: number[]) => {
+			const limit = Math.max(...counts) * 0.35;
+			const first = counts.findIndex((n) => n > limit);
+			const last = counts.length - 1 - [...counts].reverse().findIndex((n) => n > limit);
+			return first < 0 ? null : [first, last] as const;
+		};
+		const cs = span(cols);
+		const rs = span(rows);
+		if (!cs || !rs) return null;
+		const pad = 0.03;
+		const x0 = Math.max(0, cs[0] / W - pad);
+		const x1 = Math.min(1, (cs[1] + 1) / W + pad);
+		const y0 = Math.max(0, rs[0] / H - pad);
+		const y1 = Math.min(1, (rs[1] + 1) / H + pad);
+		const area = (x1 - x0) * (y1 - y0);
+		if (area < 0.15 || area > 0.85) return null;
+		return { x: x0 * bmp.width, y: y0 * bmp.height, w: (x1 - x0) * bmp.width, h: (y1 - y0) * bmp.height };
+	}
+
+	/** Bereitet das Foto für Upload und Texterkennung vor: auf den Bon zuschneiden und auf ca. 2000 px
+	 * Kantenlänge verkleinern (Handy-Kameras liefern oft 10+ MB; so bleibt der Upload schnell und unter
+	 * dem Serverlimit). */
 	async function downscale(file: File, maxEdge = 2000): Promise<Blob> {
 		try {
 			const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-			const scale = Math.min(1, maxEdge / Math.max(bmp.width, bmp.height));
+			const box = findReceiptBox(bmp) ?? { x: 0, y: 0, w: bmp.width, h: bmp.height };
+			const scale = Math.min(1, maxEdge / Math.max(box.w, box.h));
 			const canvas = document.createElement('canvas');
-			canvas.width = Math.round(bmp.width * scale);
-			canvas.height = Math.round(bmp.height * scale);
-			canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+			canvas.width = Math.round(box.w * scale);
+			canvas.height = Math.round(box.h * scale);
+			canvas.getContext('2d')!.drawImage(bmp, box.x, box.y, box.w, box.h, 0, 0, canvas.width, canvas.height);
 			const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.85));
 			return blob ?? file;
 		} catch {
@@ -186,8 +250,28 @@
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
 				<label class="flex flex-col gap-1 sm:col-span-2">
+					<span class="font-label-mono-xs text-label-mono-xs text-outline">Händler</span>
+					<select class={inputCls} name="storeId" bind:value={storeId}>
+						{#each data.stores as s (s.id)}
+							<option value={s.id}>{s.name}</option>
+						{/each}
+					</select>
+				</label>
+				<label class="flex flex-col gap-1 sm:col-span-2">
 					<span class="font-label-mono-xs text-label-mono-xs text-outline">Markt</span>
 					<input class={inputCls} name="marketName" bind:value={marketName} placeholder="z.B. REWE Musterstadt" required />
+				</label>
+				<label class="flex flex-col gap-1 sm:col-span-2">
+					<span class="font-label-mono-xs text-label-mono-xs text-outline">Straße</span>
+					<input class={inputCls} name="marketStreet" bind:value={marketStreet} />
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="font-label-mono-xs text-label-mono-xs text-outline">PLZ</span>
+					<input class={inputCls} name="marketZip" bind:value={marketZip} inputmode="numeric" />
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="font-label-mono-xs text-label-mono-xs text-outline">Ort</span>
+					<input class={inputCls} name="marketCity" bind:value={marketCity} />
 				</label>
 				<label class="flex flex-col gap-1">
 					<span class="font-label-mono-xs text-label-mono-xs text-outline">Datum</span>
@@ -203,6 +287,9 @@
 				</label>
 				<div class="flex flex-col justify-end pb-2 font-label-mono-xs text-label-mono-xs text-outline">
 					Summe der Artikel: {fmt(itemSum)} €
+					{#if totalCents !== null && totalCents !== itemSum}
+						<span class="text-error">Differenz zum Gesamtbetrag: {fmt(totalCents - itemSum)} € — fehlt ein Artikel?</span>
+					{/if}
 				</div>
 			</div>
 

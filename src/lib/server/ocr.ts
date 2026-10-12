@@ -19,12 +19,17 @@ export function isSupportedImage(buf: Buffer): boolean {
 
 export class OcrUnavailableError extends Error {}
 
-export function recognizeText(image: Buffer): Promise<string> {
+/** Seitenanalyse-Modi, die probiert werden: 4 = eine Spalte Text variabler Größe, 6 = einheitlicher
+ * Textblock. Welcher bei einem Foto besser liest, hängt von Perspektive und Licht ab, deshalb laufen
+ * beide und der Aufrufer nimmt das bessere Ergebnis. */
+export const PAGE_SEG_MODES = [4, 6] as const;
+
+export function recognizeText(image: Buffer, psm: number): Promise<string> {
 	return new Promise((resolve, reject) => {
-		// --psm 6: ein einheitlicher Textblock; liefert bei Bons mit spaltenartigem Layout (Name links,
-		// Preis rechts) zeilenweise bessere Ergebnisse als die automatische Seitenanalyse.
-		const proc = spawn('tesseract', ['stdin', 'stdout', '-l', 'deu', '--psm', '6'], {
-			stdio: ['pipe', 'pipe', 'pipe']
+		const proc = spawn('tesseract', ['stdin', 'stdout', '-l', 'deu', '--psm', String(psm)], {
+			stdio: ['pipe', 'pipe', 'pipe'],
+			// ein Thread je Lauf: die Modi laufen parallel, mehr Threads würden sich nur gegenseitig bremsen
+			env: { ...process.env, OMP_THREAD_LIMIT: '1' }
 		});
 		let out = '';
 		let err = '';

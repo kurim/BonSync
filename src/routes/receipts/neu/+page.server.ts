@@ -3,9 +3,10 @@ import { fail, redirect } from '@sveltejs/kit';
 import { db } from '#lib/server/db';
 import { receipts, receiptItems } from '#lib/server/db/schema';
 import { MANUAL_STORE_ID } from '#lib/stores-ui';
-import { parseAmountCents, parseReceiptText } from '#lib/receiptTextParser';
-import { isSupportedImage, MAX_IMAGE_BYTES, recognizeText, OcrUnavailableError } from '#lib/server/ocr';
-import type { Actions } from './$types';
+import { detectStore, parseAmountCents, parseReceiptText, scoreParse } from '#lib/receiptTextParser';
+import { listMetas } from '#lib/server/modules/registry';
+import { isSupportedImage, MAX_IMAGE_BYTES, PAGE_SEG_MODES, recognizeText, OcrUnavailableError } from '#lib/server/ocr';
+import type { Actions, PageServerLoad } from './$types';
 
 const MAX_ITEMS = 300;
 
@@ -13,6 +14,13 @@ interface DraftItem {
 	name: string;
 	price: string;
 }
+
+/** Auswahl für „Händler“: installierte Module plus der Sammelposten für alles andere. */
+function storeOptions() {
+	return [...listMetas().map((m) => ({ id: m.id, name: m.displayName })), { id: MANUAL_STORE_ID, name: 'Sonstige' }];
+}
+
+export const load: PageServerLoad = async () => ({ stores: storeOptions() });
 
 export const actions: Actions = {
 	/** Foto -> OCR -> Vorschlag. Es wird noch nichts gespeichert; die Seite zeigt den Vorschlag zur
@@ -26,11 +34,23 @@ export const actions: Actions = {
 		if (!isSupportedImage(buf)) return fail(400, { scanError: 'Nur JPEG-, PNG- oder WebP-Bilder werden unterstützt.' });
 
 		try {
-			const text = await recognizeText(buf);
-			const parsed = parseReceiptText(text);
+			const runs = (await Promise.all(PAGE_SEG_MODES.map((psm) => recognizeText(buf, psm)))).map((text) => ({
+				text,
+				parsed: parseReceiptText(text)
+			}));
+			const { text, parsed } = runs.reduce((best, r) => (scoreParse(r.parsed) > scoreParse(best.parsed) ? r : best));
+			// Händler aus dem Kopf des Bons; ohne Treffer (oder ohne dieses Modul) landet er unter "Sonstige".
+			const detected = detectStore(
+				runs.map((r) => r.text.split(/\r?\n/).slice(0, 8).join('\n')).join('\n'),
+				listMetas().map((m) => ({ id: m.id, displayName: m.displayName }))
+			);
 			return {
 				draft: {
+					storeId: detected ?? MANUAL_STORE_ID,
 					marketName: parsed.marketName ?? '',
+					marketStreet: parsed.marketStreet ?? '',
+					marketZip: parsed.marketZip ?? '',
+					marketCity: parsed.marketCity ?? '',
 					timestamp: parsed.timestamp ?? Date.now(),
 					totalCents: parsed.totalCents,
 					items: parsed.items.map((i) => ({
@@ -52,6 +72,10 @@ export const actions: Actions = {
 	save: async ({ request }) => {
 		const f = await request.formData();
 		const marketName = String(f.get('marketName') ?? '').trim();
+		const storeId = String(f.get('storeId') ?? MANUAL_STORE_ID);
+		const marketStreet = String(f.get('marketStreet') ?? '').trim();
+		const marketZip = String(f.get('marketZip') ?? '').trim();
+		const marketCity = String(f.get('marketCity') ?? '').trim();
 		const dateStr = String(f.get('date') ?? '');
 		const timeStr = String(f.get('time') ?? '') || '12:00';
 		const total = parseAmountCents(String(f.get('total') ?? ''));
@@ -74,7 +98,11 @@ export const actions: Actions = {
 
 		function formState() {
 			return {
+				storeId,
 				marketName,
+				marketStreet,
+				marketZip,
+				marketCity,
 				date: dateStr,
 				time: timeStr,
 				total: String(f.get('total') ?? ''),
@@ -82,6 +110,7 @@ export const actions: Actions = {
 			};
 		}
 
+		if (!storeOptions().some((o) => o.id === storeId)) return fail(400, { saveError: 'Händler unbekannt.', form: formState() });
 		if (!marketName) return fail(400, { saveError: 'Bitte einen Marktnamen angeben.', form: formState() });
 		const timestamp = new Date(`${dateStr}T${timeStr}`).getTime();
 		if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || Number.isNaN(timestamp)) {
@@ -89,17 +118,22 @@ export const actions: Actions = {
 		}
 		if (total === null) return fail(400, { saveError: 'Bitte den Gesamtbetrag angeben (z.B. 12,34).', form: formState() });
 
-		const externalId = randomUUID();
-		const id = `${MANUAL_STORE_ID}:${externalId}`;
+		// Das Präfix im externalId markiert den Beleg als selbst erfasst (siehe stores-ui.ts#isManualReceipt),
+		// auch wenn er einem Modul zugeordnet ist -- das Modul kennt diese Id nicht und kann nichts nachladen.
+		const externalId = `manual-${randomUUID()}`;
+		const id = `${storeId}:${externalId}`;
 		await db
 			.insert(receipts)
 			.values({
 				id,
-				storeId: MANUAL_STORE_ID,
+				storeId,
 				externalId,
 				timestamp,
 				totalCents: total,
 				marketName,
+				marketStreet: marketStreet || null,
+				marketZip: marketZip || null,
+				marketCity: marketCity || null,
 				hasStructuredItems: items.length > 0,
 				// Es gibt kein Modul, das Artikel/PDF nachladen könnte -- beides als erledigt markieren,
 				// damit die Detailseite (receipts/[id]) keinen Nachladeversuch startet.

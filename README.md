@@ -67,7 +67,9 @@ die Kamera) oder aus der Galerie wählen. Die Texterkennung läuft lokal auf dem
 Datum, Summe und Artikel erscheinen vor dem Speichern zur Kontrolle und Korrektur. Im Docker-Image ist
 Tesseract enthalten; bei Betrieb ohne Docker `tesseract-ocr` und `tesseract-ocr-deu` installieren
 (und bei `npm start` `BODY_SIZE_LIMIT=12M` setzen, sonst lehnt adapter-node Fotos über 512 KB ab).
-Die Belege erscheinen als „Manuell“; Artikel/PDF werden nicht nachgeladen.
+Der Händler wird aus dem Kopf des Bons erkannt und dem passenden Modul zugeordnet, sofern es
+installiert ist; sonst landet der Beleg unter „Sonstige“ (im Formular änderbar). Artikel/PDF werden
+für solche Belege nicht nachgeladen.
 
 ## Docker
 
