@@ -10,6 +10,11 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+### Security
+
+- Docker-Image auf Node.js 26.12.1 angehoben (Security-Releases vom Oktober 2026).
+- Abhängigkeit `ip-address` aktualisiert (GHSA-rxp7-6hxx-x8q5).
+
 ## [0.4.0] - 2026-10-12
 
 ### Added
