@@ -10,6 +10,12 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [JJJJ.MM.PATCH]` aus 
 
 ## [Unreleased]
 
+## [2026.11.1] - 2026-11-14
+
+### Fixed
+
+- Beleg-Detailseite: Fehler `each_key_duplicate` (Fehler 500), wenn ein Beleg mehrere Steuerzeilen mit gleichem Steuercode enthält (z. B. REWE).
+
 ## [2026.11.0] - 2026-11-14
 
 Ab diesem Release gilt CalVer statt SemVer.
