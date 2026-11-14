@@ -106,7 +106,7 @@
 			</p>
 		{:else}
 			<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-md">
-				{#each filtered as o (o.storeId + o.externalId)}
+				{#each filtered as o, i (i)}
 					{@const ui = data.storeUi[o.storeId]}
 					<div class="rounded-xl bg-surface-container p-space-md shadow-md flex gap-space-md {o.hidden ? 'opacity-50' : ''}">
 						{#if o.imageUrl}<img src="/angebote/bild?s={encodeURIComponent(o.storeId)}&id={encodeURIComponent(o.externalId)}" alt="" class="w-16 h-16 object-contain rounded bg-white shrink-0" loading="lazy" onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} />{/if}

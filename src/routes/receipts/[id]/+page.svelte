@@ -178,7 +178,7 @@
 									</div>
 								</div>
 							{/each}
-							{#each coupons as coupon (coupon.label)}
+							{#each coupons as coupon, i (i)}
 								<div class="flex justify-between items-baseline px-1 py-0.5 text-emerald-400 bg-emerald-950/20 rounded">
 									<span class="truncate pr-2">{coupon.label}</span>
 									<div class="flex gap-4 shrink-0 font-medium">
@@ -348,7 +348,7 @@
 						<i class="fa-solid fa-piggy-bank text-[18px]"></i>
 						Du hast {euro(r.savingsCents ?? 0)} gespart
 					</div>
-					{#each coupons as coupon (coupon.label)}
+					{#each coupons as coupon, i (i)}
 						<div class="flex justify-between text-body-sm text-on-surface-variant">
 							<span>{coupon.label}</span>
 							<span class="font-label-mono-sm text-label-mono-sm text-on-surface">{euro(coupon.amountCents)}</span>

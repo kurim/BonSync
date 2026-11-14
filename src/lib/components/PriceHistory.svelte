@@ -91,14 +91,14 @@
 
 	<div class="rounded-lg bg-surface-container-low p-space-sm" bind:clientWidth={width}>
 		<svg width={width} height={H} viewBox="0 0 {width} {H}" role="img" aria-label="Preisverlauf je Markt" class="block">
-			{#each chart.ticks as t (t.y)}
+			{#each chart.ticks as t, i (i)}
 				<line x1={PAD.left} x2={PAD.left + chart.plotW} y1={t.y} y2={t.y} stroke="currentColor" stroke-opacity="0.12" />
 				<text x={PAD.left - 8} y={t.y + 4} text-anchor="end" font-size="11" fill="currentColor" fill-opacity="0.6">{t.label}</text>
 			{/each}
-			{#each chart.xTicks as t (t.x)}
+			{#each chart.xTicks as t, i (i)}
 				<text x={t.x} y={H - 8} text-anchor="middle" font-size="11" fill="currentColor" fill-opacity="0.6">{t.label}</text>
 			{/each}
-			{#each chart.lines as l (l.color)}
+			{#each chart.lines as l, i (i)}
 				{#if l.single}<line x1={PAD.left} x2={PAD.left + chart.plotW} y1={l.pts[0][1]} y2={l.pts[0][1]} stroke={l.color} stroke-width="2" stroke-dasharray="6 5" stroke-opacity="0.6" />{/if}
 				{#if l.pts.length > 1}<polyline points={l.pts.map((p) => p.join(',')).join(' ')} fill="none" stroke={l.color} stroke-width="2.5" stroke-linejoin="round" />{/if}
 				{#each l.pts as p, i (i)}<circle cx={p[0]} cy={p[1]} r="5" fill={l.color} />{/each}
@@ -107,7 +107,7 @@
 	</div>
 
 	<ul class="mt-space-md grid grid-cols-1 md:grid-cols-2 gap-space-sm">
-		{#each series as s, i (s.marketId)}
+		{#each series as s, i (i)}
 			{@const last = s.points[s.points.length - 1]}
 			<li class="flex items-center gap-2 rounded-lg bg-surface-container-low p-space-md font-body-sm text-body-sm">
 				<span class="w-3 h-3 rounded-full shrink-0" style="background:{COLORS[i % COLORS.length]}"></span>
