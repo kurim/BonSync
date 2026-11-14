@@ -56,7 +56,7 @@
 			</p>
 		{:else}
 			<ul class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-md">
-				{#each data.watched as w (w.storeId + w.title)}
+				{#each data.watched as w, i (i)}
 					{@const ui = data.storeUi[w.storeId]}
 					<li>
 						<a href="/deals/produkt?s={encodeURIComponent(w.storeId)}&t={encodeURIComponent(w.title)}" class="flex items-center gap-1.5 rounded-xl bg-surface-container p-space-md shadow-md">

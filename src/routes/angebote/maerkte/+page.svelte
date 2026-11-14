@@ -30,7 +30,7 @@
 		<section class="flex flex-col gap-space-sm">
 			<h2 class="font-headline-sm text-headline-sm font-semibold">Gewählte Märkte</h2>
 			<div class="rounded-xl bg-surface-container p-space-md shadow-md">
-				{#each data.selected as m (m.storeId + m.marketId)}
+				{#each data.selected as m, i (i)}
 					<div class="flex items-center gap-space-sm py-2">
 						<span class="w-2 h-2 rounded-full shrink-0" style="background:{storeColor(m.storeId)}"></span>
 						<div class="min-w-0 flex-1">
@@ -53,7 +53,7 @@
 			<section class="flex flex-col gap-space-sm">
 				<h2 class="font-headline-sm text-headline-sm font-semibold">Aus deinen Einkäufen</h2>
 				<div class="rounded-xl bg-surface-container p-space-md shadow-md">
-					{#each data.suggestions as f (f.storeId + f.street + f.zip)}
+					{#each data.suggestions as f, i (i)}
 						<div class="flex items-center gap-space-sm py-2">
 							<span class="w-2 h-2 rounded-full shrink-0" style="background:{storeColor(f.storeId)}"></span>
 							<div class="min-w-0 flex-1">

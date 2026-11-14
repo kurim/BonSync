@@ -116,7 +116,7 @@
 			<div class="rounded-xl bg-surface-container p-space-md shadow-md">
 				{#if filteredFilialen.length > 0}
 					<div class="flex flex-col divide-y divide-surface-container-high/60">
-						{#each filteredFilialen as f, i (f.address + f.storeId)}
+						{#each filteredFilialen as f, i (i)}
 							{@const ui = storeUi(f.storeId)}
 							<div class="flex items-center gap-space-sm py-2">
 								<span class="w-2 h-2 rounded-full shrink-0" style="background:{ui.color}"></span>

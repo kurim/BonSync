@@ -50,7 +50,7 @@
 			{#if data.watchedCount > 0}· <a href="/deals/produkt" class="underline">Überwachte Produkte ({data.watchedCount})</a>{/if}
 		</p>
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-md">
-			{#each data.deals as d (d.storeId + d.externalId)}
+			{#each data.deals as d, i (i)}
 				{@const ui = data.storeUi[d.storeId]}
 				<div class="rounded-xl bg-surface-container p-space-md shadow-md flex gap-space-md {d.hidden ? 'opacity-50' : ''}">
 					{#if d.imageUrl}<img src="/angebote/bild?s={encodeURIComponent(d.storeId)}&id={encodeURIComponent(d.externalId)}" alt="" class="w-16 h-16 object-contain rounded bg-white shrink-0" loading="lazy" onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} />{/if}
