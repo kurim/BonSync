@@ -44,7 +44,7 @@ export interface ReceiptMeta {
 	kasse?: string;
 	bediener?: string;
 	bonNr?: string;
-	taxBreakdown: { code: string; percent: number; netCents: number; taxCents: number; grossCents: number }[];
+	taxBreakdown: { code: string; percent: number; netCents: number; taxCents: number; grossCents: number; concession?: string }[];
 	tseSignaturzaehler?: string;
 	tseTransaktion?: string;
 	tseStart?: string;
