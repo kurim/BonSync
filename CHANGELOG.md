@@ -3,8 +3,8 @@
 Alle nennenswerten Änderungen an BonSync stehen in dieser Datei.
 
 Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung
-[Semantic Versioning](https://semver.org/lang/de/). Ein gepushter Tag `vX.Y.Z` erzeugt automatisch
-ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser Datei ist
+[Calendar Versioning](https://calver.org/) (`JJJJ.MM.PATCH`, ältere Releases bis 0.4.0 noch SemVer). Ein gepushter Tag `vJJJJ.MM.PATCH` erzeugt automatisch
+ein GitHub-Release, dessen Text der passende Abschnitt `## [JJJJ.MM.PATCH]` aus dieser Datei ist
 (siehe `.github/workflows/docker.yml`, Job `release`). Vor dem Taggen also den Abschnitt
 `[Unreleased]` in eine Versionsnummer mit Datum umbenennen.
 
@@ -12,10 +12,20 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [2026.11.0] - 2026-11-14
 
+Ab diesem Release gilt CalVer statt SemVer.
+
+### Fixed
+
+- Svelte-Fehler `each_key_duplicate`: Listen mit nicht eindeutigen Schlüsseln verwenden jetzt den Index als Key.
+
 ### Security
 
-- Docker-Image auf Node.js 26.12.1 angehoben (Security-Releases vom Oktober 2026).
+- Docker-Image auf Node.js 26.13.0 angehoben (davor 26.12.1 wegen der Security-Releases vom Oktober 2026).
 - Abhängigkeit `ip-address` aktualisiert (GHSA-rxp7-6hxx-x8q5).
+
+### Changed
+
+- Abhängigkeiten aktualisiert (u.a. `pdfjs-dist` 6.5.438, `mqtt` 5.16.1, Playwright 1.65.0 und weitere Dev-Abhängigkeiten).
 
 ## [0.4.0] - 2026-10-12
 
