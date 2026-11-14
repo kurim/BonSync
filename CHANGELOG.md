@@ -10,6 +10,10 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [JJJJ.MM.PATCH]` aus 
 
 ## [Unreleased]
 
+### Fixed
+
+- REWE: Shop-in-Shop-Belege (Konzessionär): zweite Steuerzeile wird als Konzessionär (z. B. X01) beschriftet, und die USt-ID des Händlers wird nicht mehr von der des Konzessionärs überschrieben.
+
 ## [2026.11.1] - 2026-11-14
 
 ### Fixed

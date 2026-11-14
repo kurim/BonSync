@@ -226,7 +226,7 @@
 							</div>
 							{#each meta.taxBreakdown as row, i (i)}
 								<div class="grid grid-cols-[1.3fr_1fr_1fr_1fr] text-on-surface-variant font-label-mono-xs text-label-mono-xs">
-									<span>{row.code} = {row.percent.toLocaleString('de-DE', { minimumFractionDigits: 1 })}%</span>
+									<span>{row.code} = {row.percent.toLocaleString('de-DE', { minimumFractionDigits: 1 })}%{row.concession ? ` · ${row.concession}` : ''}</span>
 									<span class="text-right">{euro(row.netCents)}</span>
 									<span class="text-right">{euro(row.taxCents)}</span>
 									<span class="text-right text-on-surface">{euro(row.grossCents)}</span>
