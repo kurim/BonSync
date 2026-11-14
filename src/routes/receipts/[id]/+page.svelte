@@ -224,7 +224,7 @@
 								<span class="text-right">Steuer</span>
 								<span class="text-right">Brutto</span>
 							</div>
-							{#each meta.taxBreakdown as row (row.code)}
+							{#each meta.taxBreakdown as row, i (i)}
 								<div class="grid grid-cols-[1.3fr_1fr_1fr_1fr] text-on-surface-variant font-label-mono-xs text-label-mono-xs">
 									<span>{row.code} = {row.percent.toLocaleString('de-DE', { minimumFractionDigits: 1 })}%</span>
 									<span class="text-right">{euro(row.netCents)}</span>
