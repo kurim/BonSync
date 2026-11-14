@@ -10,6 +10,8 @@ ein GitHub-Release, dessen Text der passende Abschnitt `## [X.Y.Z]` aus dieser D
 
 ## [Unreleased]
 
+## [2026.11.0] - 2026-11-14
+
 ### Security
 
 - Docker-Image auf Node.js 26.12.1 angehoben (Security-Releases vom Oktober 2026).
